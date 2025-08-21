@@ -1,0 +1,92 @@
+@startuml
+' Título do Diagrama
+title Fluxo de Criação de Nova Transação
+
+' Configurações de Aparência para um visual mais limpo e moderno
+!theme vibrant
+skinparam sequence {
+    ArrowColor #555555
+    ActorBorderColor #555555
+    LifeLineBorderColor #555555
+    ParticipantBorderColor #555555
+    BoxBorderColor #555555
+    
+    ParticipantBackgroundColor #F8F8F8
+    ActorBackgroundColor #EFEFEF
+}
+skinparam roundcorner 10
+skinparam shadowing false
+autonumber
+
+' Declaração dos Participantes com cores distintas para fácil identificação
+actor "Usuário" as User
+participant "App\n(React Native)" as App #DDFFDD
+participant "API\n(Django REST)" as API #DDEEFF
+participant "Banco de Dados" as DB #FFEECC
+
+' Início do Fluxo
+User -> App: Acessa tela de nova transação
+activate App #lightgreen
+
+== Carregamento de Categorias ==
+
+App -> API: GET /api/categorias/\n(com JWT token)
+activate API #lightblue
+
+API -> DB: Busca categorias da empresa ativa
+activate DB #lightyellow
+DB --> API: Lista de categorias
+deactivate DB
+
+API --> App: Retorna lista de categorias (200 OK)
+deactivate API
+
+App --> User: Exibe formulário com categorias
+deactivate App
+
+== Criação da Transação ==
+
+User -> App: Preenche dados da transação e confirma
+activate App #lightgreen
+
+App -> API: POST /api/transacoes/\n(dados + JWT token)
+activate API #lightblue
+
+API -> API: Valida token JWT
+note right of API
+    Verifica se o token é válido
+    e se o usuário tem permissão
+end note
+
+API -> API: Verifica limites do plano do usuário
+
+' Bloco Alternativo: Sucesso vs. Limite Excedido
+alt #E6FFE6 Dentro dos Limites
+
+    API -> DB: Salva nova transação
+    activate DB #lightyellow
+    DB --> API: Transação salva
+    deactivate DB
+    
+    API --> App: Retorna transação criada (201 Created)
+    deactivate API
+    
+    App --> User: Exibe sucesso e atualiza lista
+    deactivate App
+
+else #FFE6E6 Limite Excedido
+
+    API --> App: Retorna erro de limite (403 Forbidden)
+    deactivate API
+    
+    App --> User: Exibe mensagem de upgrade necessário
+    note left of App
+        Sugere ao usuário fazer upgrade
+        para o plano Pro para ter
+        mais transações disponíveis
+    end note
+    deactivate App
+
+end
+
+@enduml

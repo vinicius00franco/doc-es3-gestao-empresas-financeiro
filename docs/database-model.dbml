@@ -1,0 +1,322 @@
+//================================//
+//     MODELAGEM DE DADOS (v2)    //
+//================================//
+
+// Tabela de usuários do sistema
+Table usuarios {
+  id integer [pk, increment]
+  nome varchar(255) [not null, note: 'Nome completo do usuário']
+  email varchar(255) [unique, not null, note: 'Email único para login']
+  senha_hash varchar(255) [not null, note: 'Senha hasheada com bcrypt']
+  criado_em timestamp [default: `now()`, note: 'Data de criação da conta']
+  atualizado_em timestamp [default: `now()`, note: 'Última atualização do perfil']
+  ativo boolean [default: true, note: 'Conta ativa/inativa']
+  
+  indexes {
+    email [unique]
+  }
+}
+
+// Planos de assinatura disponíveis
+Table planos {
+  id integer [pk, increment]
+  nome varchar(50) [unique, not null, note: 'Nome do plano (ex: Grátis, Pro)']
+  descricao text [note: 'Descrição detalhada do plano']
+  preco decimal(10, 2) [not null, note: 'Preço mensal do plano']
+  limite_transacoes integer [note: 'Limite de transações por mês (null = ilimitado)']
+  limite_empresas integer [note: 'Limite de empresas cadastradas (null = ilimitado)']
+  permite_relatorios boolean [default: false, note: 'Permite acesso a relatórios avançados']
+  permite_exportacao boolean [default: false, note: 'Permite exportação de dados']
+  ativo boolean [default: true, note: 'Plano disponível para contratação']
+  criado_em timestamp [default: `now()`]
+  
+  indexes {
+    nome [unique]
+    ativo
+  }
+}
+
+// Assinaturas dos usuários
+Table assinaturas {
+  id integer [pk, increment]
+  usuario_id integer [ref: > usuarios.id, unique, not null, note: 'Um usuário tem uma assinatura ativa']
+  plano_id integer [ref: > planos.id, not null]
+  status ENUM ('ativa', 'cancelada', 'inadimplente', 'expirada') [not null, default: 'ativa']
+  data_inicio date [not null, note: 'Data de início da assinatura']
+  data_fim date [note: 'Data de término (null para assinaturas ativas)']
+  valor_pago decimal(10, 2) [note: 'Valor efetivamente pago']
+  gateway_pagamento varchar(50) [note: 'Gateway usado (Stripe, PayPal, etc)']
+  id_transacao_gateway varchar(255) [note: 'ID da transação no gateway']
+  criado_em timestamp [default: `now()`]
+  atualizado_em timestamp [default: `now()`]
+  
+  indexes {
+    usuario_id [unique]
+    status
+    (data_inicio, data_fim)
+  }
+}
+
+// Empresas cadastradas pelos usuários
+Table empresas {
+  id integer [pk, increment]
+  usuario_id integer [ref: > usuarios.id, not null]
+  cnpj varchar(18) [unique, not null, note: 'CNPJ formatado XX.XXX.XXX/XXXX-XX']
+  razao_social varchar(255) [not null, note: 'Razão social da empresa']
+  nome_fantasia varchar(255) [note: 'Nome fantasia da empresa']
+  tipo_empresa ENUM ('MEI', 'ME', 'EPP', 'LTDA', 'SA') [not null]
+  ativa boolean [default: true, note: 'Empresa ativa para o usuário']
+  empresa_padrao boolean [default: false, note: 'Empresa selecionada por padrão']
+  criado_em timestamp [default: `now()`]
+  atualizado_em timestamp [default: `now()`]
+  
+  indexes {
+    cnpj [unique]
+    usuario_id
+    ativa
+    (usuario_id, empresa_padrao) [note: 'Apenas uma empresa padrão por usuário']
+  }
+}
+
+// Categorias de transações personalizadas por empresa
+Table categorias {
+  id integer [pk, increment]
+  empresa_id integer [ref: > empresas.id, not null]
+  nome varchar(100) [not null, note: 'Nome da categoria']
+  descricao text [note: 'Descrição detalhada da categoria']
+  cor varchar(7) [note: 'Cor hex para UI (#FFFFFF)']
+  icone varchar(50) [note: 'Nome do ícone para UI']
+  tipo_transacao ENUM ('entrada', 'saida', 'ambos') [not null, default: 'ambos']
+  ativa boolean [default: true]
+  categoria_padrao boolean [default: false, note: 'Categoria padrão para o tipo']
+  criado_em timestamp [default: `now()`]
+  
+  indexes {
+    empresa_id
+    tipo_transacao
+    ativa
+    (empresa_id, nome) [unique, note: 'Nome único por empresa']
+  }
+}
+
+// Transações financeiras
+Table transacoes {
+  id integer [pk, increment]
+  empresa_id integer [ref: > empresas.id, not null]
+  categoria_id integer [ref: > categorias.id, note: 'Categoria opcional']
+  descricao varchar(255) [not null, note: 'Descrição da transação']
+  valor decimal(12, 2) [not null, note: 'Valor da transação (sempre positivo)']
+  data_transacao date [not null, note: 'Data da transação']
+  tipo_transacao ENUM ('entrada', 'saida') [not null]
+  status ENUM ('pendente', 'confirmada', 'cancelada') [default: 'confirmada']
+  observacoes text [note: 'Observações adicionais']
+  numero_documento varchar(100) [note: 'Número do documento/nota fiscal']
+  forma_pagamento ENUM ('dinheiro', 'pix', 'cartao_credito', 'cartao_debito', 'boleto', 'transferencia') [note: 'Forma de pagamento']
+  recorrente boolean [default: false, note: 'Transação recorrente']
+  frequencia_recorrencia ENUM ('semanal', 'mensal', 'bimestral', 'trimestral', 'semestral', 'anual') [note: 'Frequência se recorrente']
+  criado_em timestamp [default: `now()`]
+  atualizado_em timestamp [default: `now()`]
+  
+  indexes {
+    empresa_id
+    data_transacao
+    tipo_transacao
+    status
+    categoria_id
+    (empresa_id, data_transacao) [note: 'Consultas por empresa e período']
+    (data_transacao, tipo_transacao) [note: 'Relatórios por período e tipo']
+  }
+}
+
+// Anexos das transações (comprovantes, notas fiscais)
+Table anexos_transacao {
+  id integer [pk, increment]
+  transacao_id integer [ref: > transacoes.id, not null]
+  nome_arquivo varchar(255) [not null]
+  tipo_arquivo varchar(50) [not null, note: 'MIME type do arquivo']
+  tamanho_arquivo integer [not null, note: 'Tamanho em bytes']
+  caminho_arquivo varchar(500) [not null, note: 'Caminho no storage']
+  criado_em timestamp [default: `now()`]
+  
+  indexes {
+    transacao_id
+  }
+}
+
+// Tokens de recuperação de senha
+Table tokens_recuperacao {
+  id integer [pk, increment]
+  usuario_id integer [ref: > usuarios.id, not null]
+  token varchar(255) [unique, not null]
+  usado boolean [default: false]
+  expira_em timestamp [not null]
+  criado_em timestamp [default: `now()`]
+  
+  indexes {
+    token [unique]
+    usuario_id
+    expira_em
+  }
+}
+
+// Log de atividades do usuário
+Table logs_atividade {
+  id integer [pk, increment]
+  usuario_id integer [ref: > usuarios.id, not null]
+  acao varchar(100) [not null, note: 'Tipo da ação (login, logout, criar_transacao, etc)']
+  detalhes json [note: 'Detalhes da ação em JSON']
+  ip_address varchar(45) [note: 'IP do usuário (IPv4 ou IPv6)']
+  user_agent text [note: 'User agent do navegador/app']
+  criado_em timestamp [default: `now()`]
+  
+  indexes {
+    usuario_id
+    acao
+    criado_em
+    (usuario_id, criado_em) [note: 'Histórico por usuário']
+  }
+}
+
+// Configurações do usuário
+Table configuracoes_usuario {
+  id integer [pk, increment]
+  usuario_id integer [ref: > usuarios.id, unique, not null]
+  tema ENUM ('claro', 'escuro', 'auto') [default: 'auto']
+  moeda varchar(3) [default: 'BRL', note: 'Código ISO da moeda']
+  formato_data ENUM ('DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD') [default: 'DD/MM/YYYY']
+  fuso_horario varchar(50) [default: 'America/Sao_Paulo']
+  notificacoes_email boolean [default: true]
+  notificacoes_push boolean [default: true]
+  backup_automatico boolean [default: false]
+  criado_em timestamp [default: `now()`]
+  atualizado_em timestamp [default: `now()`]
+  
+  indexes {
+    usuario_id [unique]
+  }
+}
+
+// Relacionamentos principais
+Ref: assinaturas.usuario_id > usuarios.id [delete: cascade]
+Ref: assinaturas.plano_id > planos.id [delete: restrict]
+Ref: empresas.usuario_id > usuarios.id [delete: cascade]
+Ref: categorias.empresa_id > empresas.id [delete: cascade]
+Ref: transacoes.empresa_id > empresas.id [delete: cascade]
+Ref: transacoes.categoria_id > categorias.id [delete: set null]
+Ref: anexos_transacao.transacao_id > transacoes.id [delete: cascade]
+Ref: tokens_recuperacao.usuario_id > usuarios.id [delete: cascade]
+Ref: logs_atividade.usuario_id > usuarios.id [delete: cascade]
+Ref: configuracoes_usuario.usuario_id > usuarios.id [delete: cascade]
+
+//================================//
+//          SEED DATA              //
+//================================//
+
+// Planos padrão do sistema
+Table planos_seed {
+  nome: "Grátis"
+  preco: 0.00
+  limite_transacoes: 50
+  limite_empresas: 1
+  permite_relatorios: false
+  permite_exportacao: false
+  
+  nome: "Pro"
+  preco: 29.90
+  limite_transacoes: null // ilimitado
+  limite_empresas: 5
+  permite_relatorios: true
+  permite_exportacao: true
+  
+  nome: "Enterprise"
+  preco: 99.90
+  limite_transacoes: null // ilimitado
+  limite_empresas: null // ilimitado
+  permite_relatorios: true
+  permite_exportacao: true
+}
+
+// Categorias padrão que serão criadas para cada empresa
+Table categorias_padrao_seed {
+  // Entradas
+  nome: "Vendas"
+  tipo_transacao: "entrada"
+  cor: "#4CAF50"
+  icone: "attach-money"
+  
+  nome: "Serviços"
+  tipo_transacao: "entrada"
+  cor: "#2196F3"
+  icone: "build"
+  
+  nome: "Outras Receitas"
+  tipo_transacao: "entrada"
+  cor: "#9C27B0"
+  icone: "trending-up"
+  
+  // Saídas
+  nome: "Fornecedores"
+  tipo_transacao: "saida"
+  cor: "#F44336"
+  icone: "local-shipping"
+  
+  nome: "Salários"
+  tipo_transacao: "saida"
+  cor: "#FF9800"
+  icone: "people"
+  
+  nome: "Impostos"
+  tipo_transacao: "saida"
+  cor: "#795548"
+  icone: "account-balance"
+  
+  nome: "Despesas Operacionais"
+  tipo_transacao: "saida"
+  cor: "#607D8B"
+  icone: "business"
+}
+
+//================================//
+//           ÍNDICES              //
+//================================//
+
+// Índices adicionais para performance
+Table indices_performance {
+  // Consultas frequentes de transações
+  transacoes: (empresa_id, data_transacao DESC)
+  transacoes: (empresa_id, tipo_transacao, data_transacao DESC)
+  transacoes: (empresa_id, status, data_transacao DESC)
+  
+  // Consultas de relatórios
+  transacoes: (data_transacao, tipo_transacao) // Relatórios por período
+  transacoes: (categoria_id, data_transacao DESC) // Relatórios por categoria
+  
+  // Auditoria e logs
+  logs_atividade: (usuario_id, criado_em DESC)
+  logs_atividade: (acao, criado_em DESC)
+  
+  // Cleanup de tokens expirados
+  tokens_recuperacao: (expira_em)
+}
+
+//================================//
+//        CONSTRAINTS             //
+//================================//
+
+// Regras de negócio implementadas no banco
+Table constraints {
+  // Apenas uma empresa padrão por usuário
+  empresas: UNIQUE (usuario_id) WHERE empresa_padrao = true
+  
+  // Valor sempre positivo nas transações
+  transacoes: CHECK (valor > 0)
+  
+  // Data da transação não pode ser futura
+  transacoes: CHECK (data_transacao <= CURRENT_DATE)
+  
+  // Token de recuperação tem validade mínima
+  tokens_recuperacao: CHECK (expira_em > criado_em)
+  
+  // Assinatura com data fim posterior ao início
+  assinaturas: CHECK (data_fim IS NULL OR data_fim > data_inicio)
+}

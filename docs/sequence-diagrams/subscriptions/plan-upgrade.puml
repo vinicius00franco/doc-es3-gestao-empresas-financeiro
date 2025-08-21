@@ -1,0 +1,116 @@
+@startuml
+' Título do Diagrama
+title Fluxo de Upgrade de Plano de Assinatura
+
+' Configurações de Aparência para um visual mais limpo e moderno
+!theme vibrant
+skinparam sequence {
+    ArrowColor #555555
+    ActorBorderColor #555555
+    LifeLineBorderColor #555555
+    ParticipantBorderColor #555555
+    BoxBorderColor #555555
+    
+    ParticipantBackgroundColor #F8F8F8
+    ActorBackgroundColor #EFEFEF
+}
+skinparam roundcorner 10
+skinparam shadowing false
+autonumber
+
+' Declaração dos Participantes com cores distintas para fácil identificação
+actor "Usuário" as User
+participant "App\n(React Native)" as App #DDFFDD
+participant "API\n(Django REST)" as API #DDEEFF
+participant "Gateway\nde Pagamento" as Payment #FFDDFF
+participant "Banco de Dados" as DB #FFEECC
+
+== Consulta de Planos ==
+
+User -> App: Acessa tela de planos
+activate App #lightgreen
+
+App -> API: GET /api/planos/ (com JWT token)
+activate API #lightblue
+
+API -> DB: Busca planos disponíveis
+activate DB #lightyellow
+DB --> API: Lista de planos
+deactivate DB
+
+API --> App: Retorna lista de planos (200 OK)
+deactivate API
+
+App --> User: Exibe planos com preços e recursos
+note left of App
+    **Plano Grátis:** Limitado
+    **Plano Pro:** Recursos avançados
+    - Transações ilimitadas
+    - Múltiplas empresas
+    - Relatórios avançados
+end note
+deactivate App
+
+== Processo de Upgrade ==
+
+User -> App: Seleciona plano Pro e confirma
+activate App #lightgreen
+
+App -> API: POST /api/assinaturas/upgrade/\n(plano_id + JWT)
+activate API #lightblue
+
+API -> Payment: Inicia processo de pagamento
+activate Payment #lightpink
+Payment --> API: Retorna URL/token de pagamento
+deactivate Payment
+
+API --> App: Retorna dados para pagamento (200 OK)
+deactivate API
+
+App -> Payment: Redireciona para gateway de pagamento
+deactivate App
+
+== Pagamento ==
+
+User -> Payment: Realiza pagamento
+activate Payment #lightpink
+
+Payment -> API: Webhook de confirmação de pagamento
+activate API #lightblue
+note right of API
+    Webhook deve ser validado
+    com assinatura para segurança
+end note
+
+API -> DB: Atualiza assinatura do usuário para plano Pro
+activate DB #lightyellow
+DB --> API: Assinatura atualizada
+deactivate DB
+deactivate API
+
+Payment --> App: Redireciona de volta ao app
+deactivate Payment
+activate App #lightgreen
+
+== Confirmação ==
+
+App -> API: GET /api/usuario/assinatura/ (verifica status)
+activate API #lightblue
+
+API -> DB: Busca assinatura atualizada
+activate DB #lightyellow
+DB --> API: Nova assinatura
+deactivate DB
+
+API --> App: Retorna nova assinatura (200 OK)
+deactivate API
+
+App --> User: Exibe confirmação de upgrade
+note left of App
+    Usuário agora tem acesso
+    a todas as funcionalidades
+    do plano Pro
+end note
+deactivate App
+
+@enduml
