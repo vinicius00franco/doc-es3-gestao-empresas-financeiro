@@ -4,7 +4,7 @@ Documentação técnica do aplicativo mobile React Native para o sistema de gest
 
 ## 📱 Visão Geral
 
-O app mobile é desenvolvido em React Native com arquitetura MVC adaptada para mobile, proporcionando uma experiência nativa tanto para iOS quanto Android.
+O app mobile é desenvolvido em React Native com arquitetura MVC adaptada para mobile, integrado com o backend Django REST Framework.
 
 ## 🏗️ Arquitetura
 
@@ -12,7 +12,6 @@ O app mobile é desenvolvido em React Native com arquitetura MVC adaptada para m
 
 #### Model (Modelo)
 - **Contexts**: Gerenciamento de estado global
-- **Reducers**: Lógica de estado complexa
 - **AsyncStorage**: Persistência local
 - **Types**: Interfaces TypeScript
 
@@ -33,124 +32,25 @@ mobile_app/
 ├── src/
 │   ├── components/          # Componentes reutilizáveis
 │   │   ├── UI/             # Componentes básicos de UI
-│   │   │   ├── Button/
-│   │   │   ├── Input/
-│   │   │   ├── Card/
-│   │   │   └── Modal/
 │   │   ├── Forms/          # Componentes de formulário
-│   │   │   ├── TransactionForm/
-│   │   │   ├── CompanyForm/
-│   │   │   └── LoginForm/
 │   │   └── Charts/         # Gráficos e visualizações
-│   │       ├── PieChart/
-│   │       ├── LineChart/
-│   │       └── BarChart/
 │   ├── screens/            # Telas da aplicação
 │   │   ├── Auth/
-│   │   │   ├── Login/
-│   │   │   ├── Register/
-│   │   │   └── ForgotPassword/
 │   │   ├── Dashboard/
 │   │   ├── Transactions/
-│   │   │   ├── List/
-│   │   │   ├── Create/
-│   │   │   └── Edit/
 │   │   ├── Companies/
 │   │   ├── Categories/
-│   │   ├── Reports/
 │   │   ├── Subscription/
 │   │   └── Profile/
 │   ├── navigation/         # Configuração de navegação
-│   │   ├── AppNavigator.js
-│   │   ├── AuthNavigator.js
-│   │   └── TabNavigator.js
 │   ├── services/          # Serviços de API
-│   │   ├── api.js         # Cliente HTTP base
-│   │   ├── authService.js
-│   │   ├── transactionService.js
-│   │   ├── companyService.js
-│   │   └── reportService.js
 │   ├── contexts/          # Contextos React
-│   │   ├── AuthContext.js
-│   │   ├── CompanyContext.js
-│   │   └── ThemeContext.js
 │   ├── hooks/             # Hooks customizados
-│   │   ├── useAuth.js
-│   │   ├── useCompany.js
-│   │   ├── useTransactions.js
-│   │   └── useDebounce.js
 │   ├── utils/             # Funções utilitárias
-│   │   ├── formatters.js  # Formatação de dados
-│   │   ├── validators.js  # Validações
-│   │   ├── constants.js   # Constantes
-│   │   └── storage.js     # AsyncStorage helpers
 │   ├── types/             # Tipos TypeScript
-│   │   ├── auth.ts
-│   │   ├── transaction.ts
-│   │   └── company.ts
-│   ├── assets/            # Recursos estáticos
-│   │   ├── images/
-│   │   ├── icons/
-│   │   └── fonts/
 │   └── styles/            # Estilos globais
-│       ├── theme.js
-│       ├── colors.js
-│       └── typography.js
-├── android/               # Configurações Android
-├── ios/                   # Configurações iOS
 ├── package.json
 └── README.md
-```
-
-## 🎨 Design System
-
-### Cores Principais
-```javascript
-const colors = {
-  primary: '#2196F3',
-  secondary: '#4CAF50',
-  accent: '#FF9800',
-  success: '#4CAF50',
-  warning: '#FF9800',
-  error: '#F44336',
-  text: {
-    primary: '#212121',
-    secondary: '#757575',
-    disabled: '#BDBDBD'
-  },
-  background: {
-    default: '#FAFAFA',
-    paper: '#FFFFFF',
-    dark: '#121212'
-  },
-  divider: '#E0E0E0'
-};
-```
-
-### Tipografia
-```javascript
-const typography = {
-  h1: { fontSize: 32, fontWeight: 'bold' },
-  h2: { fontSize: 28, fontWeight: 'bold' },
-  h3: { fontSize: 24, fontWeight: '600' },
-  h4: { fontSize: 20, fontWeight: '600' },
-  body1: { fontSize: 16, fontWeight: 'normal' },
-  body2: { fontSize: 14, fontWeight: 'normal' },
-  caption: { fontSize: 12, fontWeight: 'normal' },
-  button: { fontSize: 16, fontWeight: '600', textTransform: 'uppercase' }
-};
-```
-
-### Espaçamento
-```javascript
-const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48
-};
 ```
 
 ## 🔐 Autenticação
@@ -160,6 +60,7 @@ const spacing = {
 const AuthContext = createContext({
   user: null,
   tokens: null,
+  subscription: null,
   login: async (email, password) => {},
   logout: async () => {},
   register: async (userData) => {},
@@ -169,31 +70,34 @@ const AuthContext = createContext({
 ```
 
 ### Fluxo de Autenticação
-1. Usuário insere credenciais
-2. App envia para API
-3. API retorna JWT tokens
-4. Tokens são armazenados de forma segura
-5. User é redirecionado para tela principal
-6. Refresh automático dos tokens
-
-### Armazenamento Seguro
 ```javascript
-// utils/storage.js
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { encrypt, decrypt } from './encryption';
-
-export const secureStorage = {
-  setItem: async (key, value) => {
-    const encrypted = encrypt(JSON.stringify(value));
-    await AsyncStorage.setItem(key, encrypted);
+// services/authService.js
+export const authService = {
+  login: async (email, senha) => {
+    const response = await api.post('/auth/login/', { email, senha });
+    const { access_token, refresh_token, user } = response.data;
+    
+    await secureStorage.setItem('tokens', { access_token, refresh_token });
+    await secureStorage.setItem('user', user);
+    
+    return { user, tokens: { access_token, refresh_token } };
   },
-  
-  getItem: async (key) => {
-    const encrypted = await AsyncStorage.getItem(key);
-    if (encrypted) {
-      return JSON.parse(decrypt(encrypted));
-    }
-    return null;
+
+  register: async (nome, email, senha) => {
+    const response = await api.post('/auth/register/', { nome, email, senha });
+    return response.data;
+  },
+
+  refreshToken: async () => {
+    const tokens = await secureStorage.getItem('tokens');
+    const response = await api.post('/auth/refresh/', {
+      refresh_token: tokens.refresh_token
+    });
+    
+    const newTokens = { ...tokens, access_token: response.data.access_token };
+    await secureStorage.setItem('tokens', newTokens);
+    
+    return newTokens;
   }
 };
 ```
@@ -208,34 +112,31 @@ const CompanyContext = createContext({
   setActiveCompany: (company) => {},
   createCompany: async (companyData) => {},
   updateCompany: async (id, data) => {},
-  deleteCompany: async (id) => {},
   loading: false
 });
 ```
 
-### Componente de Seleção
+### Serviço de Empresas
 ```javascript
-// components/CompanySelector.js
-const CompanySelector = () => {
-  const { companies, activeCompany, setActiveCompany } = useCompany();
-  
-  return (
-    <Picker
-      selectedValue={activeCompany?.id}
-      onValueChange={(value) => {
-        const company = companies.find(c => c.id === value);
-        setActiveCompany(company);
-      }}
-    >
-      {companies.map(company => (
-        <Picker.Item 
-          key={company.id} 
-          label={company.nome_fantasia || company.razao_social}
-          value={company.id} 
-        />
-      ))}
-    </Picker>
-  );
+// services/companyService.js
+export const companyService = {
+  getAll: async () => {
+    const response = await api.get('/empresas/');
+    return response.data;
+  },
+
+  create: async (razao_social, nome_fantasia) => {
+    const response = await api.post('/empresas/', {
+      razao_social,
+      nome_fantasia
+    });
+    return response.data;
+  },
+
+  update: async (id, data) => {
+    const response = await api.put(`/empresas/${id}/`, data);
+    return response.data;
+  }
 };
 ```
 
@@ -244,12 +145,11 @@ const CompanySelector = () => {
 ### Hook useTransactions
 ```javascript
 // hooks/useTransactions.js
-export const useTransactions = (companyId) => {
+export const useTransactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     tipo: null,
-    categoria_id: null,
     data_inicio: null,
     data_fim: null
   });
@@ -257,23 +157,17 @@ export const useTransactions = (companyId) => {
   const loadTransactions = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await transactionService.getAll({
-        empresa_id: companyId,
-        ...filters
-      });
-      setTransactions(response.data.results);
+      const response = await transactionService.getAll(filters);
+      setTransactions(response.data);
     } catch (error) {
-      // Handle error
+      console.error('Erro ao carregar transações:', error);
     } finally {
       setLoading(false);
     }
-  }, [companyId, filters]);
+  }, [filters]);
 
   const createTransaction = async (transactionData) => {
-    const response = await transactionService.create({
-      ...transactionData,
-      empresa_id: companyId
-    });
+    const response = await transactionService.create(transactionData);
     setTransactions(prev => [response.data, ...prev]);
     return response.data;
   };
@@ -298,10 +192,10 @@ const TransactionForm = ({ onSubmit, initialData }) => {
     valor: '',
     data_transacao: new Date(),
     tipo_transacao: 'entrada',
-    categoria_id: null,
-    forma_pagamento: 'dinheiro',
-    observacoes: ''
+    categoria_id: null
   });
+
+  const { categories } = useCategories();
 
   const handleSubmit = () => {
     const validatedData = validateTransaction(formData);
@@ -334,12 +228,24 @@ const TransactionForm = ({ onSubmit, initialData }) => {
         required
       />
       
-      <DatePicker
-        label="Data da Transação"
-        value={formData.data_transacao}
-        onChange={(date) => setFormData(prev => ({
+      <Picker
+        label="Tipo"
+        selectedValue={formData.tipo_transacao}
+        onValueChange={(value) => setFormData(prev => ({
           ...prev,
-          data_transacao: date
+          tipo_transacao: value
+        }))}
+      >
+        <Picker.Item label="Entrada" value="entrada" />
+        <Picker.Item label="Saída" value="saida" />
+      </Picker>
+      
+      <CategoryPicker
+        categories={categories}
+        selectedValue={formData.categoria_id}
+        onValueChange={(value) => setFormData(prev => ({
+          ...prev,
+          categoria_id: value
         }))}
       />
       
@@ -349,29 +255,26 @@ const TransactionForm = ({ onSubmit, initialData }) => {
 };
 ```
 
-## 📊 Relatórios e Dashboard
+## 📊 Dashboard
 
 ### Componente Dashboard
 ```javascript
 // screens/Dashboard/index.js
 const Dashboard = () => {
-  const { activeCompany } = useCompany();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { subscription } = useAuth();
 
   useEffect(() => {
     loadDashboardData();
-  }, [activeCompany]);
+  }, []);
 
   const loadDashboardData = async () => {
     try {
-      const response = await reportService.getDashboard({
-        empresa_id: activeCompany.id,
-        periodo: '30d'
-      });
+      const response = await dashboardService.getData();
       setDashboardData(response.data);
     } catch (error) {
-      // Handle error
+      console.error('Erro ao carregar dashboard:', error);
     } finally {
       setLoading(false);
     }
@@ -383,46 +286,164 @@ const Dashboard = () => {
 
   return (
     <ScrollView style={styles.container}>
+      <SubscriptionBanner subscription={subscription} />
       <SummaryCards data={dashboardData.resumo} />
       <IncomeByCategory data={dashboardData.entradas_por_categoria} />
       <ExpenseByCategory data={dashboardData.saidas_por_categoria} />
-      <CashFlowChart data={dashboardData.fluxo_diario} />
     </ScrollView>
   );
 };
 ```
 
-### Gráfico de Pizza
+### Cards de Resumo
 ```javascript
-// components/Charts/PieChart.js
-import { PieChart } from 'react-native-chart-kit';
+// components/SummaryCards.js
+const SummaryCards = ({ data }) => {
+  return (
+    <View style={styles.container}>
+      <Card style={[styles.card, styles.incomeCard]}>
+        <Text style={styles.cardTitle}>Entradas</Text>
+        <Text style={styles.cardValue}>
+          {formatCurrency(data.total_entradas)}
+        </Text>
+      </Card>
+      
+      <Card style={[styles.card, styles.expenseCard]}>
+        <Text style={styles.cardTitle}>Saídas</Text>
+        <Text style={styles.cardValue}>
+          {formatCurrency(data.total_saidas)}
+        </Text>
+      </Card>
+      
+      <Card style={[styles.card, styles.balanceCard]}>
+        <Text style={styles.cardTitle}>Saldo</Text>
+        <Text style={[
+          styles.cardValue,
+          parseFloat(data.saldo) >= 0 ? styles.positive : styles.negative
+        ]}>
+          {formatCurrency(data.saldo)}
+        </Text>
+      </Card>
+    </View>
+  );
+};
+```
 
-const CategoryPieChart = ({ data, title }) => {
-  const chartData = data.map((item, index) => ({
-    name: item.categoria,
-    population: parseFloat(item.valor),
-    color: CHART_COLORS[index % CHART_COLORS.length],
-    legendFontColor: colors.text.primary,
-    legendFontSize: 12
-  }));
+## 💳 Sistema de Assinaturas
+
+### SubscriptionContext
+```javascript
+const SubscriptionContext = createContext({
+  plans: [],
+  currentSubscription: null,
+  upgradePlan: async (planId) => {},
+  checkLimits: () => {},
+  loading: false
+});
+```
+
+### Serviço de Assinaturas
+```javascript
+// services/subscriptionService.js
+export const subscriptionService = {
+  getPlans: async () => {
+    const response = await api.get('/planos/');
+    return response.data;
+  },
+
+  getCurrentSubscription: async () => {
+    const response = await api.get('/assinaturas/atual/');
+    return response.data;
+  },
+
+  upgrade: async (planId) => {
+    const response = await api.post('/assinaturas/upgrade/', {
+      plano_id: planId
+    });
+    return response.data;
+  }
+};
+```
+
+### Tela de Planos
+```javascript
+// screens/Subscription/PlansScreen.js
+const PlansScreen = () => {
+  const [plans, setPlans] = useState([]);
+  const { currentSubscription } = useSubscription();
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  const loadPlans = async () => {
+    try {
+      const response = await subscriptionService.getPlans();
+      setPlans(response);
+    } catch (error) {
+      console.error('Erro ao carregar planos:', error);
+    }
+  };
+
+  const handleUpgrade = async (planId) => {
+    try {
+      const response = await subscriptionService.upgrade(planId);
+      // Abrir WebView com URL de pagamento
+      openPaymentWebView(response.payment_url);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível processar o upgrade');
+    }
+  };
 
   return (
-    <Card style={styles.chartCard}>
-      <Text style={styles.chartTitle}>{title}</Text>
-      <PieChart
-        data={chartData}
-        width={screenWidth - 32}
-        height={220}
-        chartConfig={{
-          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
-        }}
-        accessor="population"
-        backgroundColor="transparent"
-        paddingLeft="15"
-        absolute
-      />
-    </Card>
+    <ScrollView style={styles.container}>
+      {plans.map(plan => (
+        <PlanCard
+          key={plan.id}
+          plan={plan}
+          isActive={currentSubscription?.plano.id === plan.id}
+          onUpgrade={() => handleUpgrade(plan.id)}
+        />
+      ))}
+    </ScrollView>
   );
+};
+```
+
+### Verificação de Limites
+```javascript
+// hooks/useSubscriptionLimits.js
+export const useSubscriptionLimits = () => {
+  const { currentSubscription } = useSubscription();
+  const { transactions } = useTransactions();
+
+  const checkTransactionLimit = () => {
+    if (!currentSubscription?.plano.limite_transacoes) {
+      return { canCreate: true, remaining: null };
+    }
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const monthlyTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.criado_em);
+      return transactionDate.getMonth() === currentMonth && 
+             transactionDate.getFullYear() === currentYear;
+    });
+
+    const used = monthlyTransactions.length;
+    const limit = currentSubscription.plano.limite_transacoes;
+    const remaining = limit - used;
+
+    return {
+      canCreate: remaining > 0,
+      remaining,
+      limit,
+      used
+    };
+  };
+
+  return { checkTransactionLimit };
 };
 ```
 
@@ -446,63 +467,62 @@ const AppNavigator = () => {
 };
 ```
 
-### Tab Navigator
+### Tab Navigator com Verificação de Permissões
 ```javascript
 // navigation/TabNavigator.js
-const Tab = createBottomTabNavigator();
+const MainTabNavigator = () => {
+  const { currentSubscription } = useSubscription();
 
-const MainTabNavigator = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      tabBarIcon: ({ focused, color, size }) => {
-        const iconName = getTabIconName(route.name, focused);
-        return <Ionicons name={iconName} size={size} color={color} />;
-      },
-    })}
-  >
-    <Tab.Screen 
-      name="Dashboard" 
-      component={DashboardScreen}
-      options={{ title: 'Início' }}
-    />
-    <Tab.Screen 
-      name="Transactions" 
-      component={TransactionsNavigator}
-      options={{ title: 'Transações' }}
-    />
-    <Tab.Screen 
-      name="Reports" 
-      component={ReportsScreen}
-      options={{ title: 'Relatórios' }}
-    />
-    <Tab.Screen 
-      name="Profile" 
-      component={ProfileScreen}
-      options={{ title: 'Perfil' }}
-    />
-  </Tab.Navigator>
-);
+  return (
+    <Tab.Navigator>
+      <Tab.Screen 
+        name="Dashboard" 
+        component={DashboardScreen}
+        options={{ title: 'Início' }}
+      />
+      <Tab.Screen 
+        name="Transactions" 
+        component={TransactionsNavigator}
+        options={{ title: 'Transações' }}
+      />
+      <Tab.Screen 
+        name="Companies" 
+        component={CompaniesScreen}
+        options={{ title: 'Empresas' }}
+      />
+      {currentSubscription?.plano.permite_relatorios && (
+        <Tab.Screen 
+          name="Reports" 
+          component={ReportsScreen}
+          options={{ title: 'Relatórios' }}
+        />
+      )}
+      <Tab.Screen 
+        name="Subscription" 
+        component={SubscriptionScreen}
+        options={{ title: 'Planos' }}
+      />
+    </Tab.Navigator>
+  );
+};
 ```
 
 ## 🎯 Componentes Reutilizáveis
 
-### Button Component
+### Button com Estados
 ```javascript
 // components/UI/Button/index.js
 const Button = ({ 
   title, 
   onPress, 
   variant = 'primary', 
-  size = 'medium',
   disabled = false,
   loading = false,
-  icon,
   ...props 
 }) => {
   const buttonStyle = [
     styles.button,
     styles[variant],
-    styles[size],
     disabled && styles.disabled
   ];
 
@@ -514,21 +534,18 @@ const Button = ({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={colors.background.paper} />
+        <ActivityIndicator color="#fff" />
       ) : (
-        <View style={styles.content}>
-          {icon && <Icon name={icon} style={styles.icon} />}
-          <Text style={[styles.text, styles[`${variant}Text`]]}>
-            {title}
-          </Text>
-        </View>
+        <Text style={[styles.text, styles[`${variant}Text`]]}>
+          {title}
+        </Text>
       )}
     </TouchableOpacity>
   );
 };
 ```
 
-### Input Component
+### Input com Validação
 ```javascript
 // components/UI/Input/index.js
 const Input = ({ 
@@ -536,8 +553,6 @@ const Input = ({
   value,
   onChangeText,
   placeholder,
-  secureTextEntry = false,
-  keyboardType = 'default',
   required = false,
   error,
   ...props 
@@ -555,8 +570,6 @@ const Input = ({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
         {...props}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
@@ -570,19 +583,15 @@ const Input = ({
 ### Formatadores
 ```javascript
 // utils/formatters.js
-export const formatCurrency = (value, currency = 'BRL') => {
+export const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: currency
+    currency: 'BRL'
   }).format(value);
 };
 
-export const formatDate = (date, format = 'DD/MM/YYYY') => {
-  return moment(date).format(format);
-};
-
-export const formatCNPJ = (cnpj) => {
-  return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+export const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('pt-BR');
 };
 ```
 
@@ -592,12 +601,6 @@ export const formatCNPJ = (cnpj) => {
 export const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
-};
-
-export const validateCNPJ = (cnpj) => {
-  // Implementação completa da validação de CNPJ
-  const cleanCNPJ = cnpj.replace(/\D/g, '');
-  return cleanCNPJ.length === 14 && isValidCNPJChecksum(cleanCNPJ);
 };
 
 export const validateTransaction = (transaction) => {
@@ -618,113 +621,83 @@ export const validateTransaction = (transaction) => {
 };
 ```
 
-## 📲 Notificações Push
+## 🚀 Configuração de Ambiente
 
-### Configuração
+### API Configuration
 ```javascript
-// services/notificationService.js
-import PushNotification from 'react-native-push-notification';
+// config/api.js
+import axios from 'axios';
+import { secureStorage } from '../utils/storage';
 
-export const notificationService = {
-  configure: () => {
-    PushNotification.configure({
-      onRegister: function(token) {
-        // Enviar token para o backend
-        authService.updatePushToken(token.token);
-      },
-      
-      onNotification: function(notification) {
-        // Lidar com notificação recebida
-        handleNotification(notification);
-      },
-    });
+const API_BASE_URL = __DEV__ 
+  ? 'http://localhost:8000/api/v1'
+  : 'https://api.gestaofinanceira.com/v1';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+});
+
+// Interceptor para adicionar token
+api.interceptors.request.use(async (config) => {
+  const tokens = await secureStorage.getItem('tokens');
+  if (tokens?.access_token) {
+    config.headers.Authorization = `Bearer ${tokens.access_token}`;
+  }
+  return config;
+});
+
+// Interceptor para refresh token
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      try {
+        const newTokens = await authService.refreshToken();
+        error.config.headers.Authorization = `Bearer ${newTokens.access_token}`;
+        return api.request(error.config);
+      } catch (refreshError) {
+        // Redirect to login
+        await authService.logout();
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+```
+
+### Armazenamento Seguro
+```javascript
+// utils/storage.js
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const secureStorage = {
+  setItem: async (key, value) => {
+    try {
+      await AsyncStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error('Erro ao salvar no storage:', error);
+    }
   },
   
-  showLocal: (title, message) => {
-    PushNotification.localNotification({
-      title,
-      message,
-    });
-  }
-};
-```
-
-## 🧪 Testes
-
-### Estrutura de Testes
-```
-__tests__/
-├── components/
-│   ├── Button.test.js
-│   └── Input.test.js
-├── screens/
-│   ├── Dashboard.test.js
-│   └── Login.test.js
-├── services/
-│   ├── authService.test.js
-│   └── transactionService.test.js
-└── utils/
-    ├── formatters.test.js
-    └── validators.test.js
-```
-
-### Exemplo de Teste
-```javascript
-// __tests__/components/Button.test.js
-import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
-import Button from '../src/components/UI/Button';
-
-describe('Button Component', () => {
-  it('renders correctly', () => {
-    const { getByText } = render(
-      <Button title="Test Button" onPress={() => {}} />
-    );
-    expect(getByText('Test Button')).toBeTruthy();
-  });
-
-  it('calls onPress when pressed', () => {
-    const mockOnPress = jest.fn();
-    const { getByText } = render(
-      <Button title="Test Button" onPress={mockOnPress} />
-    );
-    
-    fireEvent.press(getByText('Test Button'));
-    expect(mockOnPress).toHaveBeenCalledTimes(1);
-  });
-});
-```
-
-## 🚀 Build e Deploy
-
-### Scripts Package.json
-```json
-{
-  "scripts": {
-    "start": "react-native start",
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "build:android": "cd android && ./gradlew assembleRelease",
-    "build:ios": "xcodebuild -workspace ios/GestaoFinanceira.xcworkspace -scheme GestaoFinanceira -configuration Release"
-  }
-}
-```
-
-### Configuração de Ambiente
-```javascript
-// config/env.js
-const configs = {
-  development: {
-    API_URL: 'http://localhost:8000/api/v1',
-    DEBUG: true
+  getItem: async (key) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      console.error('Erro ao ler do storage:', error);
+      return null;
+    }
   },
-  production: {
-    API_URL: 'https://api.gestaofinanceira.com/v1',
-    DEBUG: false
+
+  removeItem: async (key) => {
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (error) {
+      console.error('Erro ao remover do storage:', error);
+    }
   }
 };
-
-export default configs[process.env.NODE_ENV || 'development'];
 ```

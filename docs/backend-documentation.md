@@ -1,10 +1,10 @@
-# Backend Documentation - Django REST Framework
+# Backend Documentation - Django REST Framework (MVP)
 
-Documentação técnica do backend Django REST Framework para o sistema de gestão financeira.
+Documentação técnica do backend Django REST Framework para o sistema de gestão financeira - versão MVP.
 
 ## 🐍 Visão Geral
 
-O backend é desenvolvido em Django REST Framework seguindo a arquitetura Feature Folder com padrão MVC, proporcionando alta coesão e baixo acoplamento.
+O backend é desenvolvido em Django REST Framework seguindo a arquitetura Feature Folder com padrão MVC, focado nas funcionalidades essenciais para o MVP.
 
 ## 🏗️ Arquitetura
 
@@ -15,8 +15,6 @@ Cada funcionalidade possui sua própria pasta com responsabilidades bem definida
 - **views.py**: Lógica de controle e endpoints
 - **serializers.py**: Serialização/deserialização de dados
 - **urls.py**: Roteamento de URLs
-- **tests.py**: Testes unitários e de integração
-- **permissions.py**: Permissões customizadas
 - **admin.py**: Interface administrativa
 
 ## 📁 Estrutura do Projeto
@@ -25,22 +23,11 @@ Cada funcionalidade possui sua própria pasta com responsabilidades bem definida
 gestao_financeira/
 ├── gestao_financeira/          # Configurações principais
 │   ├── __init__.py
-│   ├── settings/
-│   │   ├── __init__.py
-│   │   ├── base.py            # Configurações base
-│   │   ├── development.py     # Ambiente de desenvolvimento
-│   │   ├── production.py      # Ambiente de produção
-│   │   └── testing.py         # Ambiente de testes
+│   ├── settings.py             # Configurações
 │   ├── urls.py                # URLs principais
-│   ├── wsgi.py                # WSGI para deploy
-│   └── asgi.py                # ASGI para WebSockets
+│   └── wsgi.py                # WSGI para deploy
 ├── core/                      # Funcionalidades centrais
 │   ├── __init__.py
-│   ├── authentication.py     # Autenticação JWT customizada
-│   ├── permissions.py        # Permissões globais
-│   ├── exceptions.py         # Tratamento de exceções
-│   ├── middleware.py         # Middlewares customizados
-│   ├── pagination.py         # Paginação customizada
 │   └── validators.py         # Validadores reutilizáveis
 ├── usuarios/                  # Feature: Gestão de usuários
 │   ├── __init__.py
@@ -48,8 +35,6 @@ gestao_financeira/
 │   ├── views.py
 │   ├── serializers.py
 │   ├── urls.py
-│   ├── tests.py
-│   ├── permissions.py
 │   └── admin.py
 ├── empresas/                  # Feature: Gestão de empresas
 │   ├── __init__.py
@@ -57,7 +42,6 @@ gestao_financeira/
 │   ├── views.py
 │   ├── serializers.py
 │   ├── urls.py
-│   ├── tests.py
 │   └── admin.py
 ├── transacoes/               # Feature: Gestão de transações
 │   ├── __init__.py
@@ -65,37 +49,19 @@ gestao_financeira/
 │   ├── views.py
 │   ├── serializers.py
 │   ├── urls.py
-│   ├── tests.py
-│   ├── filters.py           # Filtros customizados
 │   └── admin.py
-├── assinaturas/             # Feature: Planos e assinaturas
+├── assinaturas/             # Feature: Assinaturas
 │   ├── __init__.py
 │   ├── models.py
 │   ├── views.py
 │   ├── serializers.py
-│   ├── urls.py
-│   ├── tests.py
-│   ├── permissions.py       # Controle de acesso por plano
-│   └── admin.py
-├── relatorios/              # Feature: Relatórios
+│   └── urls.py
+├── dashboard/               # Feature: Dashboard
 │   ├── __init__.py
 │   ├── views.py
 │   ├── serializers.py
-│   ├── urls.py
-│   ├── tests.py
-│   └── generators.py        # Geradores de relatório
-├── utils/                   # Utilitários
-│   ├── __init__.py
-│   ├── formatters.py        # Formatadores de dados
-│   ├── validators.py        # Validações específicas
-│   ├── constants.py         # Constantes do sistema
-│   └── helpers.py           # Funções auxiliares
-├── static/                  # Arquivos estáticos
-├── media/                   # Uploads de usuários
-├── requirements/            # Dependências
-│   ├── base.txt            # Dependências base
-│   ├── development.txt     # Dependências de desenvolvimento
-│   └── production.txt      # Dependências de produção
+│   └── urls.py
+├── requirements.txt         # Dependências
 ├── manage.py
 ├── Dockerfile
 └── docker-compose.yml
@@ -103,48 +69,38 @@ gestao_financeira/
 
 ## ⚙️ Configurações
 
-### Settings Base
+### Settings
 ```python
-# gestao_financeira/settings/base.py
+# gestao_financeira/settings.py
 import os
 from pathlib import Path
 from datetime import timedelta
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-in-production')
-DEBUG = False
-ALLOWED_HOSTS = []
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-key')
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 
 # Application definition
-DJANGO_APPS = [
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-]
-
-THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'django_filters',
-    'drf_spectacular',
-]
-
-LOCAL_APPS = [
     'core',
     'usuarios',
     'empresas',
     'transacoes',
     'assinaturas',
-    'relatorios',
+    'dashboard',
 ]
-
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 # REST Framework
 REST_FRAMEWORK = {
@@ -154,22 +110,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'core.pagination.CustomPageNumberPagination',
-    'PAGE_SIZE': 20,
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
-    ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # JWT Configuration
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 # Database
@@ -189,6 +135,9 @@ LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
 USE_TZ = True
+
+# CORS
+CORS_ALLOW_ALL_ORIGINS = True
 ```
 
 ## 👤 Feature: Usuarios
@@ -204,7 +153,6 @@ class Usuario(AbstractUser):
     email = models.EmailField(unique=True)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
-    ativo = models.BooleanField(default=True)
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['nome']
@@ -215,17 +163,6 @@ class Usuario(AbstractUser):
     
     def __str__(self):
         return self.nome
-
-class TokenRecuperacao(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-    token = models.CharField(max_length=255, unique=True)
-    usado = models.BooleanField(default=False)
-    expira_em = models.DateTimeField()
-    criado_em = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = 'Token de Recuperação'
-        verbose_name_plural = 'Tokens de Recuperação'
 ```
 
 ### Serializers
@@ -237,19 +174,12 @@ from .models import Usuario
 
 class UsuarioRegistroSerializer(serializers.ModelSerializer):
     senha = serializers.CharField(write_only=True, min_length=8)
-    confirmar_senha = serializers.CharField(write_only=True)
     
     class Meta:
         model = Usuario
-        fields = ('nome', 'email', 'senha', 'confirmar_senha')
-    
-    def validate(self, attrs):
-        if attrs['senha'] != attrs['confirmar_senha']:
-            raise serializers.ValidationError("As senhas não coincidem.")
-        return attrs
+        fields = ('nome', 'email', 'senha')
     
     def create(self, validated_data):
-        validated_data.pop('confirmar_senha')
         senha = validated_data.pop('senha')
         usuario = Usuario(**validated_data)
         usuario.set_password(senha)
@@ -274,8 +204,6 @@ class LoginSerializer(serializers.Serializer):
             usuario = authenticate(username=email, password=senha)
             if not usuario:
                 raise serializers.ValidationError('Credenciais inválidas.')
-            if not usuario.is_active:
-                raise serializers.ValidationError('Conta inativa.')
             attrs['usuario'] = usuario
         return attrs
 ```
@@ -288,7 +216,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 from .models import Usuario
 from .serializers import UsuarioRegistroSerializer, UsuarioSerializer, LoginSerializer
 
@@ -296,16 +223,6 @@ class RegistroView(generics.CreateAPIView):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioRegistroSerializer
     permission_classes = [AllowAny]
-    
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        usuario = serializer.save()
-        
-        return Response({
-            'usuario': UsuarioSerializer(usuario).data,
-            'message': 'Usuário criado com sucesso.'
-        }, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -336,51 +253,18 @@ class PerfilView(generics.RetrieveUpdateAPIView):
 ```python
 # empresas/models.py
 from django.db import models
-from django.core.validators import RegexValidator
 from usuarios.models import Usuario
 
 class Empresa(models.Model):
-    TIPOS_EMPRESA = [
-        ('MEI', 'Microempreendedor Individual'),
-        ('ME', 'Microempresa'),
-        ('EPP', 'Empresa de Pequeno Porte'),
-        ('LTDA', 'Sociedade Limitada'),
-        ('SA', 'Sociedade Anônima'),
-    ]
-    
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='empresas')
-    cnpj = models.CharField(
-        max_length=18,
-        unique=True,
-        validators=[RegexValidator(regex=r'^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$')]
-    )
     razao_social = models.CharField(max_length=255)
     nome_fantasia = models.CharField(max_length=255, blank=True)
-    tipo_empresa = models.CharField(max_length=5, choices=TIPOS_EMPRESA)
     ativa = models.BooleanField(default=True)
-    empresa_padrao = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name = 'Empresa'
         verbose_name_plural = 'Empresas'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['usuario'],
-                condition=models.Q(empresa_padrao=True),
-                name='unique_empresa_padrao_por_usuario'
-            )
-        ]
-    
-    def save(self, *args, **kwargs):
-        if self.empresa_padrao:
-            # Remove empresa padrão anterior
-            Empresa.objects.filter(
-                usuario=self.usuario,
-                empresa_padrao=True
-            ).update(empresa_padrao=False)
-        super().save(*args, **kwargs)
     
     def __str__(self):
         return self.nome_fantasia or self.razao_social
@@ -389,9 +273,7 @@ class Empresa(models.Model):
 ### ViewSets
 ```python
 # empresas/views.py
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Empresa
 from .serializers import EmpresaSerializer
@@ -405,22 +287,6 @@ class EmpresaViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user)
-    
-    @action(detail=True, methods=['post'])
-    def set_padrao(self, request, pk=None):
-        empresa = self.get_object()
-        empresa.empresa_padrao = True
-        empresa.save()
-        return Response({'message': 'Empresa definida como padrão.'})
-    
-    @action(detail=False, methods=['get'])
-    def padrao(self, request):
-        empresa = self.get_queryset().filter(empresa_padrao=True).first()
-        if empresa:
-            serializer = self.get_serializer(empresa)
-            return Response(serializer.data)
-        return Response({'detail': 'Nenhuma empresa padrão encontrada.'}, 
-                       status=status.HTTP_404_NOT_FOUND)
 ```
 
 ## 💰 Feature: Transacoes
@@ -429,30 +295,24 @@ class EmpresaViewSet(viewsets.ModelViewSet):
 ```python
 # transacoes/models.py
 from django.db import models
-from decimal import Decimal
-from empresas.models import Empresa
+from django.core.exceptions import ValidationError
+from usuarios.models import Usuario
 
 class Categoria(models.Model):
     TIPOS_TRANSACAO = [
         ('entrada', 'Entrada'),
         ('saida', 'Saída'),
-        ('ambos', 'Ambos'),
     ]
     
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='categorias')
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='categorias')
     nome = models.CharField(max_length=100)
-    descricao = models.TextField(blank=True)
-    cor = models.CharField(max_length=7, default='#2196F3')
-    icone = models.CharField(max_length=50, default='category')
-    tipo_transacao = models.CharField(max_length=10, choices=TIPOS_TRANSACAO, default='ambos')
-    ativa = models.BooleanField(default=True)
-    categoria_padrao = models.BooleanField(default=False)
+    tipo_transacao = models.CharField(max_length=10, choices=TIPOS_TRANSACAO)
     criado_em = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         verbose_name = 'Categoria'
         verbose_name_plural = 'Categorias'
-        unique_together = ['empresa', 'nome']
+        unique_together = ['usuario', 'nome']
 
 class Transacao(models.Model):
     TIPOS_TRANSACAO = [
@@ -460,34 +320,13 @@ class Transacao(models.Model):
         ('saida', 'Saída'),
     ]
     
-    STATUS_CHOICES = [
-        ('pendente', 'Pendente'),
-        ('confirmada', 'Confirmada'),
-        ('cancelada', 'Cancelada'),
-    ]
-    
-    FORMAS_PAGAMENTO = [
-        ('dinheiro', 'Dinheiro'),
-        ('pix', 'PIX'),
-        ('cartao_credito', 'Cartão de Crédito'),
-        ('cartao_debito', 'Cartão de Débito'),
-        ('boleto', 'Boleto'),
-        ('transferencia', 'Transferência'),
-    ]
-    
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='transacoes')
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='transacoes')
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
     descricao = models.CharField(max_length=255)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
     data_transacao = models.DateField()
     tipo_transacao = models.CharField(max_length=10, choices=TIPOS_TRANSACAO)
-    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='confirmada')
-    observacoes = models.TextField(blank=True)
-    numero_documento = models.CharField(max_length=100, blank=True)
-    forma_pagamento = models.CharField(max_length=20, choices=FORMAS_PAGAMENTO, blank=True)
-    recorrente = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
     
     class Meta:
         verbose_name = 'Transação'
@@ -502,62 +341,33 @@ class Transacao(models.Model):
         return f"{self.descricao} - {self.valor}"
 ```
 
-### Filters
-```python
-# transacoes/filters.py
-import django_filters
-from .models import Transacao
-
-class TransacaoFilter(django_filters.FilterSet):
-    data_inicio = django_filters.DateFilter(field_name='data_transacao', lookup_expr='gte')
-    data_fim = django_filters.DateFilter(field_name='data_transacao', lookup_expr='lte')
-    valor_min = django_filters.NumberFilter(field_name='valor', lookup_expr='gte')
-    valor_max = django_filters.NumberFilter(field_name='valor', lookup_expr='lte')
-    
-    class Meta:
-        model = Transacao
-        fields = ['tipo_transacao', 'categoria', 'status', 'forma_pagamento']
-```
-
 ### ViewSets
 ```python
 # transacoes/views.py
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
-from assinaturas.permissions import HasActiveSubscription
 from .models import Transacao, Categoria
 from .serializers import TransacaoSerializer, CategoriaSerializer
-from .filters import TransacaoFilter
 
 class TransacaoViewSet(viewsets.ModelViewSet):
     serializer_class = TransacaoSerializer
-    permission_classes = [IsAuthenticated, HasActiveSubscription]
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = TransacaoFilter
-    search_fields = ['descricao', 'numero_documento']
-    ordering_fields = ['data_transacao', 'valor', 'criado_em']
+    permission_classes = [IsAuthenticated, HasActiveSubscription, CheckTransactionLimits]
     
     def get_queryset(self):
-        return Transacao.objects.filter(
-            empresa__usuario=self.request.user,
-            empresa__ativa=True
-        )
+        return Transacao.objects.filter(usuario=self.request.user)
     
     def perform_create(self, serializer):
-        # Verificar limites do plano
-        self.check_transaction_limits()
-        serializer.save()
+        serializer.save(usuario=self.request.user)
+
+class CategoriaViewSet(viewsets.ModelViewSet):
+    serializer_class = CategoriaSerializer
+    permission_classes = [IsAuthenticated]
     
-    def check_transaction_limits(self):
-        user = self.request.user
-        subscription = user.assinatura
-        if subscription.plano.limite_transacoes:
-            current_month_count = self.get_current_month_transactions_count()
-            if current_month_count >= subscription.plano.limite_transacoes:
-                raise PermissionDenied(
-                    "Limite de transações mensais atingido. Faça upgrade do seu plano."
-                )
+    def get_queryset(self):
+        return Categoria.objects.filter(usuario=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)
 ```
 
 ## 📊 Feature: Assinaturas
@@ -577,11 +387,6 @@ class Plano(models.Model):
     permite_relatorios = models.BooleanField(default=False)
     permite_exportacao = models.BooleanField(default=False)
     ativo = models.BooleanField(default=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = 'Plano'
-        verbose_name_plural = 'Planos'
     
     def __str__(self):
         return self.nome
@@ -602,15 +407,51 @@ class Assinatura(models.Model):
     valor_pago = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     gateway_pagamento = models.CharField(max_length=50, blank=True)
     id_transacao_gateway = models.CharField(max_length=255, blank=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        verbose_name = 'Assinatura'
-        verbose_name_plural = 'Assinaturas'
     
     def __str__(self):
         return f"{self.usuario.nome} - {self.plano.nome}"
+```
+
+### Views
+```python
+# assinaturas/views.py
+from rest_framework import viewsets, views
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from .models import Plano, Assinatura
+from .serializers import PlanoSerializer, AssinaturaSerializer
+
+class PlanoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Plano.objects.filter(ativo=True)
+    serializer_class = PlanoSerializer
+    permission_classes = [AllowAny]
+
+class AssinaturaAtualView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            assinatura = request.user.assinatura
+            serializer = AssinaturaSerializer(assinatura)
+            return Response(serializer.data)
+        except Assinatura.DoesNotExist:
+            return Response({'detail': 'Nenhuma assinatura encontrada.'}, status=404)
+
+class UpgradeView(views.APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        plano_id = request.data.get('plano_id')
+        plano = Plano.objects.get(id=plano_id)
+        
+        # Integração com gateway de pagamento
+        payment_url = f"https://payment-gateway.com/checkout/{plano_id}"
+        session_id = f"cs_{plano_id}_{request.user.id}"
+        
+        return Response({
+            'payment_url': payment_url,
+            'session_id': session_id
+        })
 ```
 
 ### Permissions
@@ -641,48 +482,49 @@ class CanAccessReports(permissions.BasePermission):
             return subscription.plano.permite_relatorios
         except:
             return False
+
+class CheckTransactionLimits(permissions.BasePermission):
+    message = "Limite de transações atingido. Faça upgrade do seu plano."
+    
+    def has_permission(self, request, view):
+        if request.method != 'POST':
+            return True
+            
+        try:
+            subscription = request.user.assinatura
+            if subscription.plano.limite_transacoes:
+                from django.utils import timezone
+                from datetime import datetime
+                current_month = timezone.now().month
+                current_year = timezone.now().year
+                
+                transacoes_mes = request.user.transacoes.filter(
+                    criado_em__month=current_month,
+                    criado_em__year=current_year
+                ).count()
+                
+                return transacoes_mes < subscription.plano.limite_transacoes
+            return True
+        except:
+            return False
 ```
 
-## 📈 Feature: Relatorios
+## 📈 Feature: Dashboard
 
 ### Views
 ```python
-# relatorios/views.py
+# dashboard/views.py
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum, Count
-from django.utils import timezone
-from datetime import timedelta
-from assinaturas.permissions import CanAccessReports
+from django.db.models import Sum
 from transacoes.models import Transacao
 
 class DashboardView(views.APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        empresa_id = request.query_params.get('empresa_id')
-        periodo = request.query_params.get('periodo', '30d')
-        
-        # Calcular data de início baseada no período
-        if periodo == '7d':
-            data_inicio = timezone.now().date() - timedelta(days=7)
-        elif periodo == '30d':
-            data_inicio = timezone.now().date() - timedelta(days=30)
-        elif periodo == '90d':
-            data_inicio = timezone.now().date() - timedelta(days=90)
-        else:
-            data_inicio = timezone.now().date() - timedelta(days=365)
-        
-        # Filtrar transações
-        transacoes = Transacao.objects.filter(
-            empresa__usuario=request.user,
-            data_transacao__gte=data_inicio,
-            status='confirmada'
-        )
-        
-        if empresa_id:
-            transacoes = transacoes.filter(empresa_id=empresa_id)
+        transacoes = Transacao.objects.filter(usuario=request.user)
         
         # Calcular resumo
         entradas = transacoes.filter(tipo_transacao='entrada').aggregate(
@@ -705,7 +547,6 @@ class DashboardView(views.APIView):
         ).order_by('-valor')[:5]
         
         return Response({
-            'periodo': periodo,
             'resumo': {
                 'total_entradas': str(entradas),
                 'total_saidas': str(saidas),
@@ -715,107 +556,9 @@ class DashboardView(views.APIView):
             'entradas_por_categoria': entradas_por_categoria,
             'saidas_por_categoria': saidas_por_categoria
         })
-
-class FluxoCaixaView(views.APIView):
-    permission_classes = [IsAuthenticated, CanAccessReports]
-    
-    def get(self, request):
-        empresa_id = request.query_params.get('empresa_id')
-        data_inicio = request.query_params.get('data_inicio')
-        data_fim = request.query_params.get('data_fim')
-        
-        # Implementar lógica do relatório de fluxo de caixa
-        # ...
-        
-        return Response({
-            'empresa': {},
-            'periodo': {},
-            'resumo': {},
-            'transacoes': []
-        })
 ```
 
-## 🧪 Testes
-
-### Test Base
-```python
-# core/tests.py
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from rest_framework.test import APITestCase
-from rest_framework_simplejwt.tokens import RefreshToken
-
-User = get_user_model()
-
-class BaseAPITestCase(APITestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(
-            email='test@example.com',
-            nome='Test User',
-            password='testpass123'
-        )
-        self.token = RefreshToken.for_user(self.user)
-        self.client.credentials(
-            HTTP_AUTHORIZATION=f'Bearer {self.token.access_token}'
-        )
-```
-
-### Testes de Transações
-```python
-# transacoes/tests.py
-from decimal import Decimal
-from django.urls import reverse
-from rest_framework import status
-from core.tests import BaseAPITestCase
-from empresas.models import Empresa
-from .models import Transacao, Categoria
-
-class TransacaoAPITestCase(BaseAPITestCase):
-    def setUp(self):
-        super().setUp()
-        self.empresa = Empresa.objects.create(
-            usuario=self.user,
-            cnpj='12.345.678/0001-90',
-            razao_social='Test Company',
-            tipo_empresa='LTDA'
-        )
-        self.categoria = Categoria.objects.create(
-            empresa=self.empresa,
-            nome='Test Category',
-            tipo_transacao='entrada'
-        )
-    
-    def test_create_transacao(self):
-        url = reverse('transacao-list')
-        data = {
-            'empresa': self.empresa.id,
-            'categoria': self.categoria.id,
-            'descricao': 'Test Transaction',
-            'valor': '100.00',
-            'data_transacao': '2025-08-21',
-            'tipo_transacao': 'entrada'
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Transacao.objects.count(), 1)
-    
-    def test_list_transacoes(self):
-        Transacao.objects.create(
-            empresa=self.empresa,
-            categoria=self.categoria,
-            descricao='Test Transaction',
-            valor=Decimal('100.00'),
-            data_transacao='2025-08-21',
-            tipo_transacao='entrada'
-        )
-        
-        url = reverse('transacao-list')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-```
-
-## 🚀 Deploy
+## 🚀 Deploy Simples
 
 ### Dockerfile
 ```dockerfile
@@ -825,71 +568,48 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        postgresql-client \
-        build-essential \
-        libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    build-essential \
+    libpq-dev
 
 # Install Python dependencies
-COPY requirements/production.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt /app/
+RUN pip install -r requirements.txt
 
 # Copy project
 COPY . /app/
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-# Run migrations and start server
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "gestao_financeira.wsgi:application"]
+# Run server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 ```
 
-### Docker Compose Production
+### Docker Compose
 ```yaml
-# docker-compose.prod.yml
+# docker-compose.yml
 version: '3.8'
 
 services:
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./static:/app/static
-    depends_on:
-      - backend
-
   backend:
     build: .
+    ports:
+      - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/gestao_financeira
-      - DEBUG=False
-      - ALLOWED_HOSTS=yourdomain.com
+      - DEBUG=True
     depends_on:
       - db
-      - redis
 
   db:
     image: postgres:15
     environment:
       POSTGRES_DB: gestao_financeira
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: postgres123
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-
 volumes:
   postgres_data:
-  redis_data:
 ```
 
 ## 📚 Comandos Úteis
@@ -905,33 +625,18 @@ python manage.py migrate
 # Criar superusuário
 python manage.py createsuperuser
 
-# Executar testes
-python manage.py test
-
-# Coletar arquivos estáticos
-python manage.py collectstatic
-
-# Shell interativo
-python manage.py shell
-
 # Executar servidor de desenvolvimento
 python manage.py runserver
 ```
 
-### Produção
+### Docker
 ```bash
-# Build da imagem Docker
-docker build -t gestao-financeira-backend .
-
 # Executar com Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose up --build
 
 # Ver logs
 docker-compose logs -f backend
 
-# Executar migrações em produção
+# Executar migrações
 docker-compose exec backend python manage.py migrate
-
-# Backup do banco
-docker-compose exec db pg_dump -U postgres gestao_financeira > backup.sql
 ```
