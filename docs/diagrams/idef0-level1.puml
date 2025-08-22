@@ -1,32 +1,74 @@
-@startuml
-' IDEF0 - Nível 1 (Decomposição das principais funções)
+@startuml IDEF0_Level1
+title IDEF0 - Nível 1: Decomposição Funcional do Sistema
+' Configurações profissionais
 skinparam defaultFontColor #000000
 skinparam backgroundColor white
+skinparam rectangle {
+    BorderColor #333333
+    FontSize 10
+    FontStyle bold
+}
+skinparam arrow {
+    Color #555555
+    FontColor #000000
+    FontSize 9
+}
+
+' Layout otimizado
 left to right direction
 
-rectangle "Entradas\n- Dados do usuário\n- Dados financeiros" as Inputs #F8F8F8
-rectangle "Saídas\n- Relatórios\n- Resultados de processamento" as Outputs #F8F8F8
+' Entradas principais
+rectangle "**ENTRADAS**\n• Dados de registro\n• Credenciais\n• Info. empresas\n• Transações" as MainInputs #FFF2E8
 
-rectangle "A1\nGerenciar Usuários" as A1 #FFEECC
-rectangle "A2\nGerenciar Empresas" as A2 #FFEECC
-rectangle "A3\nGerenciar Transações" as A3 #FFEECC
-rectangle "A4\nGerenciar Assinaturas" as A4 #FFEECC
+' Processos decompostos (A1-A4)
+package "PROCESSOS PRINCIPAIS" {
+    rectangle "**A1**\n\n**GERENCIAR**\n**USUÁRIOS**\n\n• Cadastro\n• Autenticação\n• Recuperação senha\n• Perfis" as A1 #E8F4FD
+    
+    rectangle "**A2**\n\n**GERENCIAR**\n**EMPRESAS**\n\n• CNPJ validation\n• Múltiplas empresas\n• Empresa padrão\n• Status ativo" as A2 #F0F8E8
+    
+    rectangle "**A3**\n\n**PROCESSAR**\n**TRANSAÇÕES**\n\n• Criação\n• Validação\n• Categorização\n• Persistência" as A3 #FFF0F8
+    
+    rectangle "**A4**\n\n**CONTROLAR**\n**ASSINATURAS**\n\n• Planos\n• Limites\n• Pagamentos\n• Upgrades" as A4 #F8F0E8
+}
 
-Inputs --> A1
-Inputs --> A2
-A1 --> A2 : relacionamentos
-A2 --> A3 : contexto empresarial
-A3 --> Outputs
-A4 --> A3 : controla limites
+' Saídas específicas
+rectangle "**SAÍDAS**\n• Tokens JWT\n• Empresas ativas\n• Transações valid.\n• Relatórios\n• Status pagamento" as MainOutputs #E8F8F8
 
-note right of A1
-  Ex: cadastro, autenticação,
-  recuperação de senha
-end note
+' Controles distribuídos
+rectangle "**CONTROLES**\n• Políticas segurança\n• Regras negócio\n• Validações\n• Compliance" as Controls #F5F5F5
 
-note right of A3
-  Ex: criar, validar, persistir
-  transações; checar limites do plano
+' Mecanismos
+rectangle "**MECANISMOS**\n• Django REST API\n• PostgreSQL DB\n• JWT tokens\n• Payment gateway\n• Email service" as Mechanisms #EEEEEE
+
+' Fluxos principais
+MainInputs --> A1 : dados usuário
+A1 --> A2 : usuário autenticado
+A2 --> A3 : contexto empresa
+A3 --> A4 : verificar limites
+A4 --> MainOutputs : status/resultados
+
+' Controles e mecanismos
+Controls --> A1
+Controls --> A2  
+Controls --> A3
+Controls --> A4
+
+A1 --> Mechanisms
+A2 --> Mechanisms
+A3 --> Mechanisms
+A4 --> Mechanisms
+
+' Fluxos de dados internos
+A1 ..> A3 : perfil usuário
+A2 ..> A4 : dados empresa
+A4 ..> A3 : limites plano
+
+note as ProcessNote
+**DECOMPOSIÇÃO A-0:**
+A1: Autenticação e gestão de usuários
+A2: Gestão de múltiplas empresas por usuário
+A3: Core de processamento de transações
+A4: Controle de assinaturas e limites
 end note
 
 @enduml

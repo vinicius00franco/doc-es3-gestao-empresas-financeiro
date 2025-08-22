@@ -1,24 +1,59 @@
-@startuml
-' IDEF0 - Nível 0 (Contexto Geral)
+@startuml IDEF0_Level0
+title IDEF0 - Nível 0: Sistema de Gestão Financeira Empresarial
+' Configurações profissionais
 skinparam defaultFontColor #000000
 skinparam backgroundColor white
-left to right direction
+skinparam rectangle {
+    BorderColor #333333
+    FontSize 11
+    FontStyle bold
+}
+skinparam arrow {
+    Color #555555
+    FontColor #000000
+    FontSize 10
+}
 
-rectangle "Entradas\n- Dados do usuário\n- Dados financeiros" as Inputs #F8F8F8
-rectangle "A-0\nGestão Financeira" as A0 #DDFFDD
-rectangle "Saídas\n- Relatórios\n- Transações processadas" as Outputs #F8F8F8
-rectangle "Controles\n- Políticas\n- Planos e Regras" as Controls #EFEFEF
-rectangle "Mecanismos\n- API\n- Banco de Dados\n- Gateways" as Mechanisms #EFEFEF
+' Layout com espaçamento adequado
+top to bottom direction
 
-Inputs --> A0 : Fornece
-A0 --> Outputs : Produz
-Controls --> A0 : Controla
-Mechanisms --> A0 : Executa / Suporta
+' Controles (parte superior)
+rectangle "**CONTROLES**\n• Políticas de segurança\n• Regras de negócio\n• Limites por plano\n• Compliance fiscal" as Controls #E8F4FD {
+}
 
-note bottom of A0
-  Este é o diagrama de contexto (A-0) que mostra o
-  propósito geral do sistema e suas ICOM (Inputs,
-  Controls, Outputs, Mechanisms).
+' Entradas (lado esquerdo)
+rectangle "**ENTRADAS**\n• Dados de usuário\n• Informações empresariais\n• Transações financeiras\n• Solicitações de relatórios" as Inputs #FFF2E8 {
+}
+
+' Processo principal (centro)
+rectangle "**A-0**\n\n**GESTÃO FINANCEIRA**\n**EMPRESARIAL**\n\nPROPÓSITO: Controlar e\nmonitorar fluxo financeiro\nde múltiplas empresas" as A0 #E8F5E8 {
+}
+
+' Saídas (lado direito)
+rectangle "**SAÍDAS**\n• Relatórios financeiros\n• Dashboards analíticos\n• Transações processadas\n• Notificações" as Outputs #F8E8F8 {
+}
+
+' Mecanismos (parte inferior)
+rectangle "**MECANISMOS**\n• API REST (Django)\n• Banco de Dados PostgreSQL\n• Gateway de Pagamento\n• Serviços de Email" as Mechanisms #F0F0F0 {
+}
+
+' Conexões com labels claros
+Controls ||--|| A0 : **CONTROLA**
+Inputs ||--|| A0 : **ENTRADA**
+A0 ||--|| Outputs : **SAÍDA**
+A0 ||--|| Mechanisms : **MECANISMO**
+
+' Posicionamento manual para evitar sobreposição
+Controls -[hidden]- Inputs
+Inputs -[hidden]- Outputs
+A0 -[hidden]- Mechanisms
+
+note as N1
+**NODE:** A-0
+**TITLE:** Sistema de Gestão Financeira Empresarial
+**PURPOSE:** Automatizar e controlar processos
+financeiros de múltiplas empresas com diferentes
+planos de assinatura e níveis de acesso.
 end note
 
 @enduml

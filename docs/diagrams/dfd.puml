@@ -1,26 +1,89 @@
 @startuml
-' Diagrama de Fluxo de Dados (DFD) - Nível alto
+title Diagrama de Fluxo de Dados - Nível 1
+
+' Configurações profissionais
 skinparam defaultFontColor #000000
-left to right direction
+skinparam backgroundColor white
+skinparam usecase {
+    BorderColor #2C3E50
+    BackgroundColor #ECF0F1
+    FontSize 10
+    FontStyle bold
+}
+skinparam database {
+    BorderColor #27AE60
+    BackgroundColor #E8F8F5
+    FontSize 10
+    FontStyle bold
+}
+skinparam entity {
+    BorderColor #E74C3C
+    BackgroundColor #FADBD8
+    FontSize 11
+    FontStyle bold
+}
 
-actor "Usuário" as User
-component "App / Cliente" as Client
-component "API (Processamento)" as API
-database "Banco de Dados" as DB
-component "Gateway de Pagamento" as Payment
-component "Serviço de Email" as Email
+' Layout
+top to bottom direction
 
-User -> Client : Interações (UI)
-Client -> API : Requisições HTTP (JWT)
-API -> DB : Ler/Gravar registros
-API -> Payment : Criar sessão / Solicitar pagamento
-Payment -> API : Webhook / Confirmação
-API -> Email : Enviar notificações (reset, confirma)
-API -> Client : Respostas / Dados para UI
+' Entidades Externas
+entity "USUÁRIO\n(Cliente Final)" as User
+entity "GATEWAY\nPAGAMENTO" as PaymentGW
+entity "SERVIÇO\nEMAIL" as EmailSvc
 
-note right of API
-  Processos centrais: autenticação, validação,
-  regras de negócio, geração de relatórios.
-end note
+' Processos
+usecase "1.0\n\nAUTENTICAR\nUSUÁRIO\n\nValidar credenciais\ne gerar tokens JWT" as P1
+usecase "2.0\n\nGERENCIAR\nEMPRESAS\n\nCRUD empresas e\nvalidação CNPJ" as P2
+usecase "3.0\n\nPROCESSAR\nTRANSAÇÕES\n\nCriar, validar e\ncategorizar transações" as P3
+usecase "4.0\n\nCONTROLAR\nASSINATURAS\n\nGerenciar planos\ne limites" as P4
+usecase "5.0\n\nGERAR\nRELATÓRIOS\n\nDashboards e\nrelatórios financeiros" as P5
+
+' Depósitos de dados
+database "D1: USUÁRIOS\n\n- ID, nome, email\n- Hash senha\n- Timestamps" as D1
+database "D2: EMPRESAS\n\n- CNPJ, razão social\n- Status, empresa padrão\n- Relacionamento usuário" as D2
+database "D3: TRANSAÇÕES\n\n- Valor, descrição, data\n- Categoria, forma pagto\n- Status, empresa_id" as D3
+database "D4: ASSINATURAS\n\n- Plano atual, status\n- Data início/fim\n- Uso atual vs limites" as D4
+database "D5: CATEGORIAS\n\n- Nome, cor, ícone\n- Tipo transação\n- Empresa vinculada" as D5
+
+' Fluxos de dados
+User --> P1 : 1) Credenciais\n(email + senha)
+P1 --> User : 2) Tokens JWT\n(access + refresh)
+
+P1 --> D1 : 3) Validar usuário
+D1 --> P1 : 4) Dados usuário
+
+User --> P2 : 5) Dados empresa\n(CNPJ, razão social)
+P2 --> D2 : 6) Gravar empresa
+D2 --> P2 : 7) Lista empresas
+P2 --> User : 8) Empresas\ncadastradas
+
+User --> P3 : 9) Nova transação\n(valor, descrição, categoria)
+P3 --> P4 : 10) Verificar limites\ndo plano
+P4 --> D4 : 11) Consultar assinatura
+D4 --> P4 : 12) Status + limites
+P4 --> P3 : 13) Autorização\n(OK/limite excedido)
+
+P3 --> D3 : 14) Gravar transação
+P3 --> D5 : 15) Buscar categoria
+D5 --> P3 : 16) Dados categoria
+P3 --> User : 17) Confirmação\ncriação
+
+User --> P5 : 18) Solicitar relatório\n(período, filtros)
+P5 --> D3 : 19) Consultar transações
+D3 --> P5 : 20) Dados históricos
+P5 --> D2 : 21) Dados empresa
+D2 --> P5 : 22) Info empresa
+P5 --> User : 23) Relatório\ngerado
+
+PaymentGW --> P4 : 24) Webhook\nconfirmação pagto
+P4 --> D4 : 25) Atualizar\nassinatura
+
+P1 --> EmailSvc : 26) Enviar email\nrecuperação senha
+EmailSvc --> User : 27) Email\ncom link reset
+
+' Agrupamento visual
+together { P1; P2 }
+together { P3; P4; P5 }
+together { D1; D2; D3; D4; D5 }
 
 @enduml
