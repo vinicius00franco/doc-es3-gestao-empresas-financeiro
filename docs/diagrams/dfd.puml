@@ -1,0 +1,26 @@
+@startuml
+' Diagrama de Fluxo de Dados (DFD) - Nível alto
+skinparam defaultFontColor #000000
+left to right direction
+
+actor "Usuário" as User
+component "App / Cliente" as Client
+component "API (Processamento)" as API
+database "Banco de Dados" as DB
+component "Gateway de Pagamento" as Payment
+component "Serviço de Email" as Email
+
+User -> Client : Interações (UI)
+Client -> API : Requisições HTTP (JWT)
+API -> DB : Ler/Gravar registros
+API -> Payment : Criar sessão / Solicitar pagamento
+Payment -> API : Webhook / Confirmação
+API -> Email : Enviar notificações (reset, confirma)
+API -> Client : Respostas / Dados para UI
+
+note right of API
+  Processos centrais: autenticação, validação,
+  regras de negócio, geração de relatórios.
+end note
+
+@enduml

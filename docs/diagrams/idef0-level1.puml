@@ -1,0 +1,32 @@
+@startuml
+' IDEF0 - Nível 1 (Decomposição das principais funções)
+skinparam defaultFontColor #000000
+skinparam backgroundColor white
+left to right direction
+
+rectangle "Entradas\n- Dados do usuário\n- Dados financeiros" as Inputs #F8F8F8
+rectangle "Saídas\n- Relatórios\n- Resultados de processamento" as Outputs #F8F8F8
+
+rectangle "A1\nGerenciar Usuários" as A1 #FFEECC
+rectangle "A2\nGerenciar Empresas" as A2 #FFEECC
+rectangle "A3\nGerenciar Transações" as A3 #FFEECC
+rectangle "A4\nGerenciar Assinaturas" as A4 #FFEECC
+
+Inputs --> A1
+Inputs --> A2
+A1 --> A2 : relacionamentos
+A2 --> A3 : contexto empresarial
+A3 --> Outputs
+A4 --> A3 : controla limites
+
+note right of A1
+  Ex: cadastro, autenticação,
+  recuperação de senha
+end note
+
+note right of A3
+  Ex: criar, validar, persistir
+  transações; checar limites do plano
+end note
+
+@enduml

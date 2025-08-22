@@ -1,0 +1,38 @@
+@startuml
+' Diagrama de Casos de Uso
+skinparam defaultFontColor #000000
+left to right direction
+
+actor "Usuário" as User
+actor "Admin" as Admin
+actor "Sistema Externo (Pag.)" as External
+
+rectangle "Sistema: Gestão Financeira" {
+  usecase "Registrar Usuário" as UC1
+  usecase "Autenticar" as UC2
+  usecase "Gerenciar Empresas" as UC3
+  usecase "Criar Transação" as UC4
+  usecase "Gerar Relatórios" as UC5
+  usecase "Gerenciar Assinaturas" as UC6
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+
+Admin --> UC3
+Admin --> UC5
+Admin --> UC6
+
+External --> UC2 : OAuth / SSO
+External --> UC4 : Processamento de Pagamento
+
+note bottom of UC5
+  Casos de uso principais por ator. Expanda conforme
+  necessário para sub-casos e detalhamento.
+end note
+
+@enduml

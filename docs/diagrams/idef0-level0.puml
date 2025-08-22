@@ -1,0 +1,24 @@
+@startuml
+' IDEF0 - Nível 0 (Contexto Geral)
+skinparam defaultFontColor #000000
+skinparam backgroundColor white
+left to right direction
+
+rectangle "Entradas\n- Dados do usuário\n- Dados financeiros" as Inputs #F8F8F8
+rectangle "A-0\nGestão Financeira" as A0 #DDFFDD
+rectangle "Saídas\n- Relatórios\n- Transações processadas" as Outputs #F8F8F8
+rectangle "Controles\n- Políticas\n- Planos e Regras" as Controls #EFEFEF
+rectangle "Mecanismos\n- API\n- Banco de Dados\n- Gateways" as Mechanisms #EFEFEF
+
+Inputs --> A0 : Fornece
+A0 --> Outputs : Produz
+Controls --> A0 : Controla
+Mechanisms --> A0 : Executa / Suporta
+
+note bottom of A0
+  Este é o diagrama de contexto (A-0) que mostra o
+  propósito geral do sistema e suas ICOM (Inputs,
+  Controls, Outputs, Mechanisms).
+end note
+
+@enduml
