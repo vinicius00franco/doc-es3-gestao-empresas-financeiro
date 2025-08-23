@@ -83,10 +83,17 @@ rectangle "**SISTEMA DE GESTÃO FINANCEIRA EMPRESARIAL**" {
         usecase "**UC15**\n\nValidar\nAssinatura" as UC15
     }
     
+    package "**MÓDULO: PROCESSAMENTO FISCAL**" #E8F8F5 {
+        usecase "**UC16**\n\nUpload\nNota Fiscal" as UC16
+        usecase "**UC17**\n\nExtrair Dados\nNF-e" as UC17
+        usecase "**UC18**\n\nCriar\nFornecedor" as UC18
+        usecase "**UC19**\n\nIntegrar\nTransação" as UC19
+    }
+    
     package "**MÓDULO: ADMINISTRAÇÃO**" #FFEBEE {
-        usecase "**UC16**\n\nGerenciar\nUsuários" as UC16
-        usecase "**UC17**\n\nMonitorar\nSistema" as UC17
-        usecase "**UC18**\n\nConfigurar\nPlanos" as UC18
+        usecase "**UC20**\n\nGerenciar\nUsuários" as UC20
+        usecase "**UC21**\n\nMonitorar\nSistema" as UC21
+        usecase "**UC22**\n\nConfigurar\nPlanos" as UC22
     }
 }
 
@@ -107,13 +114,16 @@ User -down-> UC09 : **categoriza**
 User -down-> UC11 : **solicita**
 User -down-> UC12 : **visualiza**
 User -down-> UC13 : **solicita**
+User -down-> UC16 : **faz upload**
+User -down-> UC18 : **visualiza**
 
 ' Relacionamentos do Administrador
-Admin -down-> UC16 : **administra**
-Admin -down-> UC17 : **monitora**
-Admin -down-> UC18 : **configura**
+Admin -down-> UC20 : **administra**
+Admin -down-> UC21 : **monitora**
+Admin -down-> UC22 : **configura**
 Admin -down-> UC07 : **valida**
 Admin -down-> UC15 : **verifica**
+Admin -down-> UC17 : **monitora**
 
 ' Relacionamentos Sistemas Externos
 PaymentGW -down-> UC14 : **processa**
@@ -125,6 +135,9 @@ UC08 .right.> UC10 : **<<include>>**\n(sempre verificar)
 UC13 .down.> UC14 : **<<include>>**\n(processar pagto)
 UC05 .right.> UC07 : **<<include>>**\n(validar dados)
 UC09 .up.> UC08 : **<<extend>>**\n(opcional)
+UC16 .right.> UC17 : **<<include>>**\n(sempre extrair)
+UC17 .down.> UC18 : **<<extend>>**\n(se não existe)
+UC17 .right.> UC19 : **<<include>>**\n(sempre integrar)
 
 ' Notas explicativas estratégicas
 note top of UC10 : **REGRA CRÍTICA**\nVerificar limites antes\nde criar transação
@@ -132,5 +145,7 @@ note top of UC10 : **REGRA CRÍTICA**\nVerificar limites antes\nde criar transa�
 note right of UC14 : **INTEGRAÇÃO**\nWebhook confirma\npagamento processado
 
 note left of UC02 : **SEGURANÇA**\nJWT tokens com\nrefresh automático
+
+note right of UC17 : **PROCESSAMENTO**\nOCR para PDF\nXML parser para NF-e
 
 @enduml

@@ -23,6 +23,7 @@ graph TB
             E --> F[💰 transacoes/]
             F --> G[💳 assinaturas/]
             G --> H[📊 dashboard/]
+            H --> I[📄 notas_fiscais/]
         end
         
         subgraph "SHARED"
@@ -36,6 +37,7 @@ graph TB
     style F fill:#FFF3E0
     style G fill:#F3E5F5
     style H fill:#FFEBEE
+    style I fill:#E8F8F5
 ```
 
 ### Padrão MVC por Feature
@@ -126,6 +128,7 @@ flowchart TD
     D --> H[🏢 Empresas]
     D --> I[💰 Transacoes]
     D --> J[💳 Assinaturas]
+    D --> K[📄 Notas Fiscais]
     
     F --> K[(🗄️ PostgreSQL)]
     G --> K
@@ -252,6 +255,15 @@ flowchart LR
 ├── GET  /planos/              # Listar planos
 ├── GET  /assinaturas/atual/   # Assinatura atual
 └── POST /assinaturas/upgrade/ # Fazer upgrade
+
+📄 NOTAS FISCAIS
+├── POST /invoices/upload/     # Upload NF-e
+├── GET  /invoices/{id}/status/ # Status processamento
+└── GET  /invoices/            # Listar processadas
+
+🏭 FORNECEDORES
+├── GET  /fornecedores/        # Listar fornecedores
+└── POST /fornecedores/        # Criar fornecedor
 
 📊 DASHBOARD
 └── GET  /dashboard/           # Dados resumo

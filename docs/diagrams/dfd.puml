@@ -56,6 +56,7 @@ usecase "**2.0**\n\n**GERENCIAR**\n**EMPRESAS**\n\nCRUD empresas e\nvalidação 
 usecase "**3.0**\n\n**PROCESSAR**\n**TRANSAÇÕES**\n\nCriar, validar e\ncategorizar transações" as P3
 usecase "**4.0**\n\n**CONTROLAR**\n**ASSINATURAS**\n\nGerenciar planos\ne limites" as P4
 usecase "**5.0**\n\n**GERAR**\n**RELATÓRIOS**\n\nDashboards e\nrelatórios financeiros" as P5
+usecase "**6.0**\n\n**PROCESSAR**\n**NOTAS FISCAIS**\n\nUpload, extração\ne integração automática" as P6
 
 ' Depósitos de dados (base)
 database "**D1: USUÁRIOS**\n\n• ID, nome, email\n• Hash senha\n• Timestamps" as D1
@@ -63,6 +64,8 @@ database "**D2: EMPRESAS**\n\n• Razão social\n• Status ativo\n• Relaciona
 database "**D3: TRANSAÇÕES**\n\n• Valor, descrição, data\n• Categoria, tipo\n• Status, usuário_id" as D3
 database "**D4: ASSINATURAS**\n\n• Plano atual, status\n• Data início/fim\n• Uso atual vs limites" as D4
 database "**D5: CATEGORIAS**\n\n• Nome, tipo transação\n• Usuário vinculado\n• Metadados" as D5
+database "**D6: NOTAS FISCAIS**\n\n• Arquivo original\n• Dados extraídos\n• Status processamento" as D6
+database "**D7: FORNECEDORES**\n\n• CNPJ, razão social\n• Dados contato\n• Histórico transações" as D7
 
 ' Layout hierárquico otimizado
 User -[hidden]- PaymentGW
@@ -72,11 +75,14 @@ P1 -[hidden]- P2
 P2 -[hidden]- P3
 P3 -[hidden]- P4
 P4 -[hidden]- P5
+P5 -[hidden]- P6
 
 D1 -[hidden]- D2
 D2 -[hidden]- D3
 D3 -[hidden]- D4
 D4 -[hidden]- D5
+D5 -[hidden]- D6
+D6 -[hidden]- D7
 
 ' Fluxos de Autenticação
 User -down-> P1 : **1)** Credenciais\n(email + senha)
@@ -108,6 +114,16 @@ D3 -up-> P5 : **20)** Dados históricos
 P5 -down-> D2 : **21)** Dados empresa
 D2 -up-> P5 : **22)** Info empresa
 P5 -up-> User : **23)** Relatório\ngerado
+
+' Fluxos de Processamento de Notas Fiscais
+User -down-> P6 : **28)** Upload NF-e\n(XML/PDF)
+P6 -down-> D6 : **29)** Armazenar arquivo
+D6 -up-> P6 : **30)** Dados extraídos
+P6 -down-> D7 : **31)** Criar/atualizar\nfornecedor
+D7 -up-> P6 : **32)** Info fornecedor
+P6 -right-> P3 : **33)** Criar transação\nautomática
+P3 -down-> D3 : **34)** Gravar transação\nNF-e
+P6 -up-> User : **35)** Status\nprocessamento
 
 ' Fluxos de Integrações Externas
 PaymentGW -down-> P4 : **24)** Webhook\nconfirmação pagto

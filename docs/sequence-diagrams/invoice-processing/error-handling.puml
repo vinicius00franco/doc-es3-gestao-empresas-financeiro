@@ -1,0 +1,28 @@
+@startuml error-handling
+title Tratamento de Erros no Processamento
+
+participant "Queue Worker" as QW
+participant "Invoice Service" as IS
+participant "Error Handler" as EH
+participant "Notification Service" as NS
+database "Database" as DB
+
+QW -> IS: Processar invoice
+IS -> IS: Erro durante processamento
+
+alt Erro recuperável
+    IS -> EH: Log erro temporário
+    EH -> DB: Incrementar tentativas
+    EH -> QW: Reagendar processamento
+    note right: Retry com backoff exponencial
+else Erro crítico
+    IS -> EH: Log erro crítico
+    EH -> DB: Marcar como "failed"
+    EH -> NS: Notificar usuário
+    NS -> NS: Enviar email/push
+end
+
+IS -> DB: Atualizar status e logs
+IS -> QW: Finalizar processamento
+
+@enduml

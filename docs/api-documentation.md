@@ -332,6 +332,94 @@ Fazer upgrade de plano.
 }
 ```
 
+## Notas Fiscais
+
+#### POST /invoices/upload/
+Upload de nota fiscal para processamento.
+
+**Request:** Multipart form-data
+```
+file: arquivo XML ou PDF
+empresa_id: ID da empresa
+```
+
+**Response (201):**
+```json
+{
+  "id": 1,
+  "status": "uploaded",
+  "arquivo_original": "nfe_123.xml",
+  "empresa_id": 1,
+  "criado_em": "2025-08-21T10:00:00Z"
+}
+```
+
+#### GET /invoices/{id}/status/
+Verificar status do processamento.
+
+**Response (200):**
+```json
+{
+  "id": 1,
+  "status": "processed",
+  "dados_extraidos": {
+    "cnpj_emissor": "12.345.678/0001-90",
+    "razao_social": "Fornecedor ABC LTDA",
+    "valor_total": "1500.00",
+    "data_emissao": "2025-08-20"
+  },
+  "transacao_criada_id": 25
+}
+```
+
+#### GET /invoices/
+Listar notas fiscais processadas.
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "arquivo_original": "nfe_123.xml",
+    "status": "processed",
+    "fornecedor": "Fornecedor ABC LTDA",
+    "valor_total": "1500.00",
+    "processado_em": "2025-08-21T10:05:00Z"
+  }
+]
+```
+
+## Fornecedores
+
+#### GET /fornecedores/
+Listar fornecedores cadastrados.
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "cnpj": "12.345.678/0001-90",
+    "razao_social": "Fornecedor ABC LTDA",
+    "nome_fantasia": "ABC Tech",
+    "criado_automaticamente": true,
+    "total_transacoes": 5
+  }
+]
+```
+
+#### POST /fornecedores/
+Cadastrar novo fornecedor.
+
+**Request Body:**
+```json
+{
+  "cnpj": "98.765.432/0001-10",
+  "razao_social": "Novo Fornecedor LTDA",
+  "nome_fantasia": "Novo Tech"
+}
+```
+
 ## Dashboard
 
 #### GET /dashboard/
@@ -344,7 +432,8 @@ Resumo financeiro básico.
     "total_entradas": "15750.00",
     "total_saidas": "8920.50",
     "saldo": "6829.50",
-    "transacoes_count": 47
+    "transacoes_count": 47,
+    "notas_fiscais_processadas": 12
   },
   "entradas_por_categoria": [
     {
@@ -357,7 +446,12 @@ Resumo financeiro básico.
       "categoria": "Fornecedores",
       "valor": "5200.00"
     }
-  ]
+  ],
+  "processamento_fiscal": {
+    "pendentes": 2,
+    "processadas_mes": 8,
+    "erro_processamento": 1
+  }
 }
 ```
 

@@ -31,7 +31,7 @@ left to right direction
 ' Layout horizontal IDEF0 padrão
 
 ' Entradas (esquerda)
-rectangle "**ENTRADAS (I)**\n\n● Credenciais Usuário\n● Dados Empresariais\n● Transações Financeiras\n● Solicitações Relatórios\n● Confirmações Pagamento" as Inputs #FFF3E0
+rectangle "**ENTRADAS (I)**\n\n● Credenciais Usuário\n● Dados Empresariais\n● Transações Financeiras\n● Solicitações Relatórios\n● Confirmações Pagamento\n● Notas Fiscais (XML/PDF)" as Inputs #FFF3E0
 
 ' Controles (topo)
 rectangle "**CONTROLES (C)**\n\n● Políticas Segurança\n● Regras Negócio\n● Limites por Plano\n● Compliance Fiscal\n● Validações JWT" as Controls #E3F2FD
@@ -40,10 +40,10 @@ rectangle "**CONTROLES (C)**\n\n● Políticas Segurança\n● Regras Negócio\n
 rectangle "**A-0**\n\n**SISTEMA**\n**GESTÃO FINANCEIRA**\n**EMPRESARIAL**\n\n**PROPÓSITO:**\nControle financeiro\nintegrado de múltiplas\nempresas com planos\nde assinatura" as A0 #E8F5E8
 
 ' Saídas (direita)
-rectangle "**SAÍDAS (O)**\n\n● Relatórios Financeiros\n● Dashboards Interativos\n● Transações Validadas\n● Notificações Sistema\n● Tokens Autenticação" as Outputs #F3E5F5
+rectangle "**SAÍDAS (O)**\n\n● Relatórios Financeiros\n● Dashboards Interativos\n● Transações Validadas\n● Notificações Sistema\n● Tokens Autenticação\n● Dados Fiscais Processados" as Outputs #F3E5F5
 
 ' Mecanismos (base)
-rectangle "**MECANISMOS (M)**\n\n● Django REST Framework\n● PostgreSQL Database\n● Gateway Pagamento\n● Serviço Email SMTP\n● React Native App" as Mechanisms #ECEFF1
+rectangle "**MECANISMOS (M)**\n\n● Django REST Framework\n● PostgreSQL Database\n● Gateway Pagamento\n● Serviço Email SMTP\n● React Native App\n● OCR/XML Parser\n● File Storage" as Mechanisms #ECEFF1
 
 ' Posicionamento horizontal IDEF0
 Inputs -[hidden]right- A0

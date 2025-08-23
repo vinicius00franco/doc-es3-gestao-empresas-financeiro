@@ -1,0 +1,28 @@
+@startuml upload-invoice
+title Upload e Processamento de Nota Fiscal
+
+actor Usuario as U
+participant "Frontend" as F
+participant "API Gateway" as API
+participant "Invoice Service" as IS
+participant "File Storage" as FS
+participant "Queue" as Q
+database "Database" as DB
+
+U -> F: Upload arquivo NF-e (XML/PDF)
+F -> API: POST /api/invoices/upload
+API -> IS: Validar arquivo
+IS -> FS: Armazenar arquivo
+FS -> IS: URL do arquivo
+IS -> DB: Salvar registro inicial
+IS -> Q: Enfileirar para processamento
+IS -> API: Status: "uploaded"
+API -> F: Response com ID da invoice
+F -> U: Confirmação de upload
+
+note right of Q
+  Processamento assíncrono
+  será executado em background
+end note
+
+@enduml

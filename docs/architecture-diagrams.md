@@ -13,6 +13,7 @@ graph TD
             B3[Feature: Empresas]
             B4[Feature: Assinaturas]
             B5[Feature: Dashboard]
+            B6[Feature: Notas Fiscais]
         end
         subgraph "Banco de Dados"
             C[(PostgreSQL)]
@@ -24,11 +25,13 @@ graph TD
     A --> B3
     A --> B4
     A --> B5
+    A --> B6
     B1 --> C
     B2 --> C
     B3 --> C
     B4 --> C
     B5 --> C
+    B6 --> C
 
     style A fill:#61DAFB,stroke:#333,stroke-width:2px
     style B1 fill:#092E20,stroke:#333,stroke-width:2px,color:#FFF
@@ -56,6 +59,7 @@ graph TB
             F_TRANS[transacoes/]
             F_COMP[empresas/]
             F_DASH[dashboard/]
+            F_INVOICE[notas_fiscais/]
         end
         
         subgraph "Core"
@@ -70,6 +74,8 @@ graph TB
 
     subgraph "Externos"
         PAYMENT[Gateway Pagamento]
+        OCR[Serviço OCR]
+        STORAGE[File Storage]
     end
 
     RN --> RN_AUTH
@@ -81,14 +87,18 @@ graph TB
     MIDDLEWARE --> F_TRANS
     MIDDLEWARE --> F_COMP
     MIDDLEWARE --> F_DASH
+    MIDDLEWARE --> F_INVOICE
     
     F_USER --> SERIALIZERS
     F_TRANS --> SERIALIZERS
     F_COMP --> SERIALIZERS
     F_DASH --> SERIALIZERS
+    F_INVOICE --> SERIALIZERS
     
     SERIALIZERS --> POSTGRES
     DJANGO --> PAYMENT
+    F_INVOICE --> OCR
+    F_INVOICE --> STORAGE
     
     RN_API --> RN_STORE
 

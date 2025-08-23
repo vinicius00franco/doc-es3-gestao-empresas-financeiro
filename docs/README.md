@@ -14,6 +14,7 @@ Documentação técnica completa do sistema de gestão financeira desenvolvido c
   - Transactions — Criação e validação
   - Subscriptions — Upgrades e limites
   - User Management — Recuperação de senha
+  - Invoice Processing — Processamento de NF-e
 
 ### 📖 **Documentação Técnica**
 - **`api-documentation.md`** — Especificação completa da API REST
@@ -68,11 +69,19 @@ Documentação técnica completa do sistema de gestão financeira desenvolvido c
 - Gateway de pagamento
 - Upgrade automático
 
+### 📄 **Processamento de Notas Fiscais**
+- Upload de arquivos XML (NF-e) e PDF
+- Extração automática de dados
+- Criação automática de fornecedores
+- Integração com transações
+- Validação de dados fiscais
+
 ### 📊 **Relatórios e Dashboard**
 - Resumo financeiro
 - Gráficos por categoria
 - Filtros por período
 - Exportação de dados
+- Métricas de processamento fiscal
 
 ## 📖 Como Usar Esta Documentação
 

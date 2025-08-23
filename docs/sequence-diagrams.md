@@ -12,6 +12,7 @@ Os diagramas foram reorganizados em:
 - **[transactions/](sequence-diagrams/transactions/)** - Gestão de transações financeiras
 - **[subscriptions/](sequence-diagrams/subscriptions/)** - Assinaturas e verificação de limites
 - **[user-management/](sequence-diagrams/user-management/)** - Gestão de usuários e recuperação de senha
+- **[invoice-processing/](sequence-diagrams/invoice-processing/)** - Processamento automático de notas fiscais
 
 ## Formatos Disponíveis
 
@@ -38,6 +39,12 @@ Cada diagrama está disponível em dois formatos:
 ### Gestão de Usuários
 - [Recuperação de Senha - PlantUML](sequence-diagrams/user-management/password-reset.puml)
 - [Recuperação de Senha - Mermaid](sequence-diagrams/user-management/password-reset.mmd)
+
+### Processamento de Notas Fiscais
+- [Upload de NF-e - PlantUML](sequence-diagrams/invoice-processing/upload-invoice.puml)
+- [Extração de Dados - PlantUML](sequence-diagrams/invoice-processing/extract-data.puml)
+- [Análise e Categorização - PlantUML](sequence-diagrams/invoice-processing/analyze-and-categorize.puml)
+- [Tratamento de Erros - PlantUML](sequence-diagrams/invoice-processing/error-handling.puml)
 
 ---
 
