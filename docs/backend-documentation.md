@@ -1,642 +1,441 @@
 # Backend Documentation - Django REST Framework (MVP)
 
-Documentação técnica do backend Django REST Framework para o sistema de gestão financeira - versão MVP.
+Documentação visual e técnica do backend Django REST Framework para o sistema de gestão financeira.
 
 ## 🐍 Visão Geral
 
-O backend é desenvolvido em Django REST Framework seguindo a arquitetura Feature Folder com padrão MVC, focado nas funcionalidades essenciais para o MVP.
+Backend desenvolvido em Django REST Framework seguindo arquitetura Feature Folder com padrão MVC, focado nas funcionalidades essenciais para o MVP.
 
-## 🏗️ Arquitetura
+## 🏗️ Arquitetura Visual
 
-### Feature Folder Structure
-Cada funcionalidade possui sua própria pasta com responsabilidades bem definidas:
-
-- **models.py**: Definição dos modelos de dados (ORM)
-- **views.py**: Lógica de controle e endpoints
-- **serializers.py**: Serialização/deserialização de dados
-- **urls.py**: Roteamento de URLs
-- **admin.py**: Interface administrativa
-
-## 📁 Estrutura do Projeto
-
-```
-gestao_financeira/
-├── gestao_financeira/          # Configurações principais
-│   ├── __init__.py
-│   ├── settings.py             # Configurações
-│   ├── urls.py                # URLs principais
-│   └── wsgi.py                # WSGI para deploy
-├── core/                      # Funcionalidades centrais
-│   ├── __init__.py
-│   └── validators.py         # Validadores reutilizáveis
-├── usuarios/                  # Feature: Gestão de usuários
-│   ├── __init__.py
-│   ├── models.py
-│   ├── views.py
-│   ├── serializers.py
-│   ├── urls.py
-│   └── admin.py
-├── empresas/                  # Feature: Gestão de empresas
-│   ├── __init__.py
-│   ├── models.py
-│   ├── views.py
-│   ├── serializers.py
-│   ├── urls.py
-│   └── admin.py
-├── transacoes/               # Feature: Gestão de transações
-│   ├── __init__.py
-│   ├── models.py
-│   ├── views.py
-│   ├── serializers.py
-│   ├── urls.py
-│   └── admin.py
-├── assinaturas/             # Feature: Assinaturas
-│   ├── __init__.py
-│   ├── models.py
-│   ├── views.py
-│   ├── serializers.py
-│   └── urls.py
-├── dashboard/               # Feature: Dashboard
-│   ├── __init__.py
-│   ├── views.py
-│   ├── serializers.py
-│   └── urls.py
-├── requirements.txt         # Dependências
-├── manage.py
-├── Dockerfile
-└── docker-compose.yml
+### Estrutura Feature Folder
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TB
+    subgraph "GESTÃO FINANCEIRA BACKEND"
+        subgraph "CORE"
+            A[settings.py] --> B[urls.py]
+            B --> C[wsgi.py]
+        end
+        
+        subgraph "FEATURES"
+            D[👤 usuarios/] --> E[🏢 empresas/]
+            E --> F[💰 transacoes/]
+            F --> G[💳 assinaturas/]
+            G --> H[📊 dashboard/]
+        end
+        
+        subgraph "SHARED"
+            I[🔧 core/validators]
+            J[📦 requirements.txt]
+        end
+    end
+    
+    style D fill:#E3F2FD
+    style E fill:#E8F5E8
+    style F fill:#FFF3E0
+    style G fill:#F3E5F5
+    style H fill:#FFEBEE
 ```
 
-## ⚙️ Configurações
+### Padrão MVC por Feature
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph LR
+    subgraph "FEATURE STRUCTURE"
+        A[📄 models.py] --> B[🎯 views.py]
+        B --> C[🔄 serializers.py]
+        C --> D[🛣️ urls.py]
+        D --> E[⚙️ admin.py]
+    end
+    
+    subgraph "RESPONSIBILITIES"
+        F[Data Models] --> G[Business Logic]
+        G --> H[Data Serialization]
+        H --> I[URL Routing]
+        I --> J[Admin Interface]
+    end
+    
+    A -.-> F
+    B -.-> G
+    C -.-> H
+    D -.-> I
+    E -.-> J
+```
 
-### Settings
-```python
-# gestao_financeira/settings.py
-import os
-from pathlib import Path
-from datetime import timedelta
+## 📊 Modelo de Dados Visual
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Security
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-mvp-key')
-DEBUG = True
-ALLOWED_HOSTS = ['*']
-
-# Application definition
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'corsheaders',
-    'core',
-    'usuarios',
-    'empresas',
-    'transacoes',
-    'assinaturas',
-    'dashboard',
-]
-
-# REST Framework
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
-
-# JWT Configuration
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-}
-
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'gestao_financeira'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres123'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+### Relacionamentos Principais
+```mermaid
+erDiagram
+    USUARIO ||--o{ EMPRESA : possui
+    USUARIO ||--|| ASSINATURA : tem
+    USUARIO ||--o{ CATEGORIA : cria
+    USUARIO ||--o{ TRANSACAO : registra
+    
+    EMPRESA ||--o{ TRANSACAO : contem
+    CATEGORIA ||--o{ TRANSACAO : classifica
+    PLANO ||--o{ ASSINATURA : define
+    
+    USUARIO {
+        int id PK
+        string nome
+        string email UK
+        datetime criado_em
     }
-}
-
-# Internationalization
-LANGUAGE_CODE = 'pt-br'
-TIME_ZONE = 'America/Sao_Paulo'
-USE_I18N = True
-USE_TZ = True
-
-# CORS
-CORS_ALLOW_ALL_ORIGINS = True
+    
+    EMPRESA {
+        int id PK
+        int usuario_id FK
+        string razao_social
+        string nome_fantasia
+        boolean ativa
+    }
+    
+    TRANSACAO {
+        int id PK
+        int usuario_id FK
+        int categoria_id FK
+        string descricao
+        decimal valor
+        date data_transacao
+        string tipo_transacao
+    }
+    
+    ASSINATURA {
+        int id PK
+        int usuario_id FK
+        int plano_id FK
+        string status
+        date data_inicio
+        date data_fim
+    }
 ```
 
-## 👤 Feature: Usuarios
-
-### Models
-```python
-# usuarios/models.py
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-
-class Usuario(AbstractUser):
-    nome = models.CharField(max_length=255)
-    email = models.EmailField(unique=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
+### Fluxo de Dados
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+flowchart TD
+    A[📱 Mobile App] --> B[🌐 Django API]
+    B --> C{🔐 JWT Auth}
+    C -->|✅ Valid| D[🎯 Feature Views]
+    C -->|❌ Invalid| E[🚫 401 Error]
     
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['nome']
+    D --> F[📊 Dashboard]
+    D --> G[👤 Usuarios]
+    D --> H[🏢 Empresas]
+    D --> I[💰 Transacoes]
+    D --> J[💳 Assinaturas]
     
-    class Meta:
-        verbose_name = 'Usuário'
-        verbose_name_plural = 'Usuários'
+    F --> K[(🗄️ PostgreSQL)]
+    G --> K
+    H --> K
+    I --> K
+    J --> K
     
-    def __str__(self):
-        return self.nome
+    style A fill:#61DAFB
+    style B fill:#092E20,color:#FFF
+    style K fill:#336791,color:#FFF
 ```
 
-### Serializers
-```python
-# usuarios/serializers.py
-from rest_framework import serializers
-from django.contrib.auth import authenticate
-from .models import Usuario
+## 🔐 Sistema de Autenticação
 
-class UsuarioRegistroSerializer(serializers.ModelSerializer):
-    senha = serializers.CharField(write_only=True, min_length=8)
+### Fluxo JWT
+```mermaid
+sequenceDiagram
+    participant U as 📱 User
+    participant A as 🔐 Auth API
+    participant D as 🗄️ Database
     
-    class Meta:
-        model = Usuario
-        fields = ('nome', 'email', 'senha')
+    U->>A: POST /auth/login/
+    A->>D: Validate credentials
+    D-->>A: User data
+    A-->>U: JWT tokens
     
-    def create(self, validated_data):
-        senha = validated_data.pop('senha')
-        usuario = Usuario(**validated_data)
-        usuario.set_password(senha)
-        usuario.save()
-        return usuario
-
-class UsuarioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Usuario
-        fields = ('id', 'nome', 'email', 'criado_em', 'atualizado_em')
-        read_only_fields = ('id', 'criado_em', 'atualizado_em')
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    senha = serializers.CharField()
-    
-    def validate(self, attrs):
-        email = attrs.get('email')
-        senha = attrs.get('senha')
-        
-        if email and senha:
-            usuario = authenticate(username=email, password=senha)
-            if not usuario:
-                raise serializers.ValidationError('Credenciais inválidas.')
-            attrs['usuario'] = usuario
-        return attrs
+    Note over U,A: Subsequent requests
+    U->>A: API call + JWT header
+    A->>A: Validate token
+    A-->>U: Protected resource
 ```
 
-### Views
-```python
-# usuarios/views.py
-from rest_framework import status, generics
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Usuario
-from .serializers import UsuarioRegistroSerializer, UsuarioSerializer, LoginSerializer
-
-class RegistroView(generics.CreateAPIView):
-    queryset = Usuario.objects.all()
-    serializer_class = UsuarioRegistroSerializer
-    permission_classes = [AllowAny]
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_view(request):
-    serializer = LoginSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+### Níveis de Permissão
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD
+    A[🔓 Public Endpoints] --> B[📝 Register]
+    A --> C[🔑 Login]
     
-    usuario = serializer.validated_data['usuario']
-    refresh = RefreshToken.for_user(usuario)
+    D[🔒 Authenticated] --> E[👤 Profile]
+    D --> F[🏢 Companies]
+    D --> G[💰 Transactions]
     
-    return Response({
-        'access_token': str(refresh.access_token),
-        'refresh_token': str(refresh),
-        'user': UsuarioSerializer(usuario).data
-    })
-
-class PerfilView(generics.RetrieveUpdateAPIView):
-    serializer_class = UsuarioSerializer
-    permission_classes = [IsAuthenticated]
+    H[💎 Premium Features] --> I[📊 Advanced Reports]
+    H --> J[📤 Data Export]
     
-    def get_object(self):
-        return self.request.user
+    style A fill:#E8F5E8
+    style D fill:#FFF3E0
+    style H fill:#F3E5F5
 ```
 
-## 🏢 Feature: Empresas
+## 💳 Sistema de Assinaturas
 
-### Models
-```python
-# empresas/models.py
-from django.db import models
-from usuarios.models import Usuario
-
-class Empresa(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='empresas')
-    razao_social = models.CharField(max_length=255)
-    nome_fantasia = models.CharField(max_length=255, blank=True)
-    ativa = models.BooleanField(default=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
+### Planos e Limites
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TB
+    subgraph "PLANO GRÁTIS"
+        A[50 transações/mês]
+        B[1 empresa]
+        C[Relatórios básicos]
+    end
     
-    class Meta:
-        verbose_name = 'Empresa'
-        verbose_name_plural = 'Empresas'
+    subgraph "PLANO PRO"
+        D[Transações ilimitadas]
+        E[5 empresas]
+        F[Relatórios avançados]
+        G[Exportação dados]
+    end
     
-    def __str__(self):
-        return self.nome_fantasia or self.razao_social
+    H[👤 Usuário] --> I{Plano Atual?}
+    I -->|Grátis| A
+    I -->|Pro| D
+    
+    style A fill:#FFEBEE
+    style D fill:#E8F5E8
 ```
 
-### ViewSets
-```python
-# empresas/views.py
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from .models import Empresa
-from .serializers import EmpresaSerializer
-
-class EmpresaViewSet(viewsets.ModelViewSet):
-    serializer_class = EmpresaSerializer
-    permission_classes = [IsAuthenticated]
+### Fluxo de Upgrade
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+flowchart LR
+    A[📋 Selecionar Plano] --> B[💳 Gateway Pagamento]
+    B --> C[✅ Confirmação]
+    C --> D[🔄 Webhook]
+    D --> E[📝 Atualizar BD]
+    E --> F[🎉 Plano Ativo]
     
-    def get_queryset(self):
-        return Empresa.objects.filter(usuario=self.request.user, ativa=True)
-    
-    def perform_create(self, serializer):
-        serializer.save(usuario=self.request.user)
+    style A fill:#E3F2FD
+    style B fill:#FFF3E0
+    style F fill:#E8F5E8
 ```
 
-## 💰 Feature: Transacoes
+## 📊 API Endpoints Visuais
 
-### Models
-```python
-# transacoes/models.py
-from django.db import models
-from django.core.exceptions import ValidationError
-from usuarios.models import Usuario
+### Estrutura de URLs
+```
+📍 API BASE: /api/v1/
 
-class Categoria(models.Model):
-    TIPOS_TRANSACAO = [
-        ('entrada', 'Entrada'),
-        ('saida', 'Saída'),
-    ]
-    
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='categorias')
-    nome = models.CharField(max_length=100)
-    tipo_transacao = models.CharField(max_length=10, choices=TIPOS_TRANSACAO)
-    criado_em = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = 'Categoria'
-        verbose_name_plural = 'Categorias'
-        unique_together = ['usuario', 'nome']
+🔐 AUTENTICAÇÃO
+├── POST /auth/login/          # Login usuário
+├── POST /auth/register/       # Registro
+└── POST /auth/refresh/        # Refresh token
 
-class Transacao(models.Model):
-    TIPOS_TRANSACAO = [
-        ('entrada', 'Entrada'),
-        ('saida', 'Saída'),
-    ]
-    
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='transacoes')
-    categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
-    descricao = models.CharField(max_length=255)
-    valor = models.DecimalField(max_digits=12, decimal_places=2)
-    data_transacao = models.DateField()
-    tipo_transacao = models.CharField(max_length=10, choices=TIPOS_TRANSACAO)
-    criado_em = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = 'Transação'
-        verbose_name_plural = 'Transações'
-        ordering = ['-data_transacao', '-criado_em']
-    
-    def clean(self):
-        if self.valor <= 0:
-            raise ValidationError('O valor deve ser maior que zero.')
-    
-    def __str__(self):
-        return f"{self.descricao} - {self.valor}"
+👤 USUÁRIOS
+├── GET  /users/profile/       # Perfil atual
+└── PUT  /users/profile/       # Atualizar perfil
+
+🏢 EMPRESAS
+├── GET  /empresas/            # Listar empresas
+└── POST /empresas/            # Criar empresa
+
+💰 TRANSAÇÕES
+├── GET  /transacoes/          # Listar transações
+├── POST /transacoes/          # Criar transação
+├── PUT  /transacoes/{id}/     # Atualizar
+└── DEL  /transacoes/{id}/     # Excluir
+
+🏷️ CATEGORIAS
+├── GET  /categorias/          # Listar categorias
+└── POST /categorias/          # Criar categoria
+
+💳 ASSINATURAS
+├── GET  /planos/              # Listar planos
+├── GET  /assinaturas/atual/   # Assinatura atual
+└── POST /assinaturas/upgrade/ # Fazer upgrade
+
+📊 DASHBOARD
+└── GET  /dashboard/           # Dados resumo
 ```
 
-### ViewSets
-```python
-# transacoes/views.py
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from .models import Transacao, Categoria
-from .serializers import TransacaoSerializer, CategoriaSerializer
-
-class TransacaoViewSet(viewsets.ModelViewSet):
-    serializer_class = TransacaoSerializer
-    permission_classes = [IsAuthenticated, HasActiveSubscription, CheckTransactionLimits]
+### Códigos de Resposta
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph LR
+    A[📤 Request] --> B{Processing}
+    B -->|Success| C[✅ 200 OK]
+    B -->|Created| D[🆕 201 Created]
+    B -->|No Content| E[📭 204 No Content]
+    B -->|Bad Request| F[❌ 400 Bad Request]
+    B -->|Unauthorized| G[🔒 401 Unauthorized]
+    B -->|Forbidden| H[🚫 403 Forbidden]
+    B -->|Not Found| I[❓ 404 Not Found]
+    B -->|Server Error| J[💥 500 Internal Error]
     
-    def get_queryset(self):
-        return Transacao.objects.filter(usuario=self.request.user)
-    
-    def perform_create(self, serializer):
-        serializer.save(usuario=self.request.user)
-
-class CategoriaViewSet(viewsets.ModelViewSet):
-    serializer_class = CategoriaSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        return Categoria.objects.filter(usuario=self.request.user)
-    
-    def perform_create(self, serializer):
-        serializer.save(usuario=self.request.user)
+    style C fill:#E8F5E8
+    style D fill:#E8F5E8
+    style E fill:#E8F5E8
+    style F fill:#FFEBEE
+    style G fill:#FFEBEE
+    style H fill:#FFEBEE
+    style I fill:#FFEBEE
+    style J fill:#FFEBEE
 ```
 
-## 📊 Feature: Assinaturas
+## ⚡ Performance e Otimizações
 
-### Models
-```python
-# assinaturas/models.py
-from django.db import models
-from usuarios.models import Usuario
-
-class Plano(models.Model):
-    nome = models.CharField(max_length=50, unique=True)
-    descricao = models.TextField()
-    preco = models.DecimalField(max_digits=10, decimal_places=2)
-    limite_transacoes = models.IntegerField(null=True, blank=True)
-    limite_empresas = models.IntegerField(null=True, blank=True)
-    permite_relatorios = models.BooleanField(default=False)
-    permite_exportacao = models.BooleanField(default=False)
-    ativo = models.BooleanField(default=True)
+### Estratégias de Cache
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD
+    A[📱 Request] --> B{Cache Hit?}
+    B -->|Yes| C[⚡ Return Cached]
+    B -->|No| D[🗄️ Query Database]
+    D --> E[💾 Store in Cache]
+    E --> F[📤 Return Response]
     
-    def __str__(self):
-        return self.nome
-
-class Assinatura(models.Model):
-    STATUS_CHOICES = [
-        ('ativa', 'Ativa'),
-        ('cancelada', 'Cancelada'),
-        ('inadimplente', 'Inadimplente'),
-        ('expirada', 'Expirada'),
-    ]
-    
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='assinatura')
-    plano = models.ForeignKey(Plano, on_delete=models.PROTECT)
-    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='ativa')
-    data_inicio = models.DateField()
-    data_fim = models.DateField(null=True, blank=True)
-    valor_pago = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    gateway_pagamento = models.CharField(max_length=50, blank=True)
-    id_transacao_gateway = models.CharField(max_length=255, blank=True)
-    
-    def __str__(self):
-        return f"{self.usuario.nome} - {self.plano.nome}"
+    style C fill:#E8F5E8
+    style D fill:#FFF3E0
 ```
 
-### Views
-```python
-# assinaturas/views.py
-from rest_framework import viewsets, views
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
-from .models import Plano, Assinatura
-from .serializers import PlanoSerializer, AssinaturaSerializer
-
-class PlanoViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Plano.objects.filter(ativo=True)
-    serializer_class = PlanoSerializer
-    permission_classes = [AllowAny]
-
-class AssinaturaAtualView(views.APIView):
-    permission_classes = [IsAuthenticated]
+### Otimizações de Query
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph LR
+    A[🔍 Query Optimization] --> B[📊 Select Related]
+    A --> C[📋 Prefetch Related]
+    A --> D[🎯 Only/Defer Fields]
+    A --> E[📄 Pagination]
     
-    def get(self, request):
-        try:
-            assinatura = request.user.assinatura
-            serializer = AssinaturaSerializer(assinatura)
-            return Response(serializer.data)
-        except Assinatura.DoesNotExist:
-            return Response({'detail': 'Nenhuma assinatura encontrada.'}, status=404)
-
-class UpgradeView(views.APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def post(self, request):
-        plano_id = request.data.get('plano_id')
-        plano = Plano.objects.get(id=plano_id)
-        
-        # Integração com gateway de pagamento
-        payment_url = f"https://payment-gateway.com/checkout/{plano_id}"
-        session_id = f"cs_{plano_id}_{request.user.id}"
-        
-        return Response({
-            'payment_url': payment_url,
-            'session_id': session_id
-        })
+    style A fill:#E3F2FD
+    style B fill:#E8F5E8
+    style C fill:#E8F5E8
+    style D fill:#E8F5E8
+    style E fill:#E8F5E8
 ```
 
-### Permissions
-```python
-# assinaturas/permissions.py
-from rest_framework import permissions
-from rest_framework.exceptions import PermissionDenied
+## 🐳 Deploy e Infraestrutura
 
-class HasActiveSubscription(permissions.BasePermission):
-    message = "Assinatura inativa ou expirada."
+### Arquitetura de Deploy
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TB
+    subgraph "DOCKER ENVIRONMENT"
+        A[🐳 Django Container] --> B[🗄️ PostgreSQL Container]
+        A --> C[📧 Email Service]
+        A --> D[💳 Payment Gateway]
+    end
     
-    def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        
-        try:
-            subscription = request.user.assinatura
-            return subscription.status == 'ativa'
-        except:
-            return False
-
-class CanAccessReports(permissions.BasePermission):
-    message = "Seu plano não permite acesso a relatórios."
+    E[🌐 Internet] --> F[🔒 HTTPS/SSL]
+    F --> A
     
-    def has_permission(self, request, view):
-        try:
-            subscription = request.user.assinatura
-            return subscription.plano.permite_relatorios
-        except:
-            return False
-
-class CheckTransactionLimits(permissions.BasePermission):
-    message = "Limite de transações atingido. Faça upgrade do seu plano."
-    
-    def has_permission(self, request, view):
-        if request.method != 'POST':
-            return True
-            
-        try:
-            subscription = request.user.assinatura
-            if subscription.plano.limite_transacoes:
-                from django.utils import timezone
-                from datetime import datetime
-                current_month = timezone.now().month
-                current_year = timezone.now().year
-                
-                transacoes_mes = request.user.transacoes.filter(
-                    criado_em__month=current_month,
-                    criado_em__year=current_year
-                ).count()
-                
-                return transacoes_mes < subscription.plano.limite_transacoes
-            return True
-        except:
-            return False
+    style A fill:#092E20,color:#FFF
+    style B fill:#336791,color:#FFF
 ```
 
-## 📈 Feature: Dashboard
-
-### Views
-```python
-# dashboard/views.py
-from rest_framework import views
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum
-from transacoes.models import Transacao
-
-class DashboardView(views.APIView):
-    permission_classes = [IsAuthenticated]
+### Configuração Simples
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+flowchart LR
+    A[📦 Docker Compose] --> B[🔧 Build Images]
+    B --> C[🗄️ Setup Database]
+    C --> D[🔄 Run Migrations]
+    D --> E[🚀 Start Services]
     
-    def get(self, request):
-        transacoes = Transacao.objects.filter(usuario=request.user)
-        
-        # Calcular resumo
-        entradas = transacoes.filter(tipo_transacao='entrada').aggregate(
-            total=Sum('valor'))['total'] or 0
-        saidas = transacoes.filter(tipo_transacao='saida').aggregate(
-            total=Sum('valor'))['total'] or 0
-        
-        # Entradas por categoria
-        entradas_por_categoria = transacoes.filter(
-            tipo_transacao='entrada'
-        ).values('categoria__nome').annotate(
-            valor=Sum('valor')
-        ).order_by('-valor')[:5]
-        
-        # Saídas por categoria
-        saidas_por_categoria = transacoes.filter(
-            tipo_transacao='saida'
-        ).values('categoria__nome').annotate(
-            valor=Sum('valor')
-        ).order_by('-valor')[:5]
-        
-        return Response({
-            'resumo': {
-                'total_entradas': str(entradas),
-                'total_saidas': str(saidas),
-                'saldo': str(entradas - saidas),
-                'transacoes_count': transacoes.count()
-            },
-            'entradas_por_categoria': entradas_por_categoria,
-            'saidas_por_categoria': saidas_por_categoria
-        })
+    style A fill:#2496ED,color:#FFF
+    style E fill:#E8F5E8
 ```
 
-## 🚀 Deploy Simples
+## 📈 Monitoramento
 
-### Dockerfile
-```dockerfile
-# Dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    postgresql-client \
-    build-essential \
-    libpq-dev
-
-# Install Python dependencies
-COPY requirements.txt /app/
-RUN pip install -r requirements.txt
-
-# Copy project
-COPY . /app/
-
-# Run server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+### Métricas Principais
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD
+    A[📊 System Metrics] --> B[⏱️ Response Time]
+    A --> C[💾 Memory Usage]
+    A --> D[🔄 Request Rate]
+    A --> E[❌ Error Rate]
+    
+    F[📈 Business Metrics] --> G[👥 Active Users]
+    F --> H[💰 Transactions/Day]
+    F --> I[💳 Subscription Rate]
+    
+    style A fill:#E3F2FD
+    style F fill:#F3E5F5
 ```
 
-### Docker Compose
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  backend:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - DEBUG=True
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: gestao_financeira
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
+### Health Check
+```mermaid
+stateDiagram-v2
+    [*] --> Healthy
+    Healthy --> Warning: High Load
+    Healthy --> Critical: Service Down
+    Warning --> Healthy: Load Normal
+    Warning --> Critical: Overload
+    Critical --> Warning: Partial Recovery
+    Critical --> Healthy: Full Recovery
 ```
 
-## 📚 Comandos Úteis
+## 🔧 Comandos Úteis
 
 ### Desenvolvimento
-```bash
-# Criar migrações
-python manage.py makemigrations
+```
+🛠️ COMANDOS ESSENCIAIS
 
-# Aplicar migrações
-python manage.py migrate
+📦 Setup
+├── docker-compose up --build    # Iniciar ambiente
+├── python manage.py migrate     # Aplicar migrações
+└── python manage.py runserver   # Servidor dev
 
-# Criar superusuário
-python manage.py createsuperuser
+🗄️ Database
+├── python manage.py makemigrations  # Criar migrações
+├── python manage.py createsuperuser # Admin user
+└── python manage.py shell           # Shell interativo
 
-# Executar servidor de desenvolvimento
-python manage.py runserver
+🐳 Docker
+├── docker-compose logs -f backend   # Ver logs
+├── docker-compose exec backend bash # Acessar container
+└── docker-compose down              # Parar serviços
 ```
 
-### Docker
-```bash
-# Executar com Docker Compose
-docker-compose up --build
+## 📋 Checklist de Qualidade
 
-# Ver logs
-docker-compose logs -f backend
-
-# Executar migrações
-docker-compose exec backend python manage.py migrate
+### Padrões Implementados
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph LR
+    A[✅ Code Quality] --> B[🧪 Tests]
+    A --> C[📝 Documentation]
+    A --> D[🔒 Security]
+    A --> E[⚡ Performance]
+    
+    F[✅ API Standards] --> G[🌐 RESTful]
+    F --> H[📊 Status Codes]
+    F --> I[🔄 Pagination]
+    F --> J[🔍 Filtering]
+    
+    style A fill:#E8F5E8
+    style F fill:#E8F5E8
 ```
+
+### Segurança
+```mermaid
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD
+    A[🛡️ Security Layers] --> B[🔐 JWT Authentication]
+    A --> C[🔒 HTTPS/TLS]
+    A --> D[🚫 CORS Policy]
+    A --> E[✅ Input Validation]
+    A --> F[🛡️ SQL Injection Protection]
+    
+    style A fill:#FFEBEE
+    style B fill:#E8F5E8
+    style C fill:#E8F5E8
+    style D fill:#E8F5E8
+    style E fill:#E8F5E8
+    style F fill:#E8F5E8
+```
+
+---
+
+💡 **Foco**: Arquitetura robusta, performance otimizada e segurança em todas as camadas do backend.

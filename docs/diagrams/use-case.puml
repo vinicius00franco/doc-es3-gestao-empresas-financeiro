@@ -1,110 +1,136 @@
 @startuml UseCaseDiagram
+!theme plain
 title Diagrama de Casos de Uso - Sistema de Gestão Financeira
-' Configurações profissionais
+
+' Configurações profissionais otimizadas
 skinparam defaultFontColor #000000
 skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 80
+
 skinparam usecase {
-    BorderColor #333333
+    BorderColor #2C3E50
     BackgroundColor #F8F9FA
-    FontSize 10
-}
-skinparam actor {
-    BorderColor #333333
-    BackgroundColor #E8F4FD
     FontSize 11
     FontStyle bold
+    BorderThickness 2
+}
+skinparam actor {
+    BorderColor #34495E
+    BackgroundColor #E8F4FD
+    FontSize 12
+    FontStyle bold
+    BorderThickness 2
 }
 skinparam rectangle {
     BorderColor #2C3E50
     BackgroundColor #ECF0F1
     FontStyle bold
+    BorderThickness 2
+}
+skinparam package {
+    BorderColor #7F8C8D
+    BackgroundColor #FAFBFC
+    FontSize 11
+    FontStyle bold
+    BorderThickness 1
+}
+skinparam arrow {
+    Color #34495E
+    FontColor #000000
+    FontSize 10
+    Thickness 2
 }
 
-left to right direction
+' Layout otimizado
+top to bottom direction
 
-' Atores principais
-actor "**Usuário\nFinal**" as User #E8F4FD
-actor "**Administrador\nSistema**" as Admin #FFE8E8
-actor "**Gateway de\nPagamento**" as PaymentGW #E8FFE8
-actor "**Serviço de\nEmail**" as EmailService #FFF8E8
+' Atores do sistema (posicionamento estratégico)
+actor "**USUÁRIO**\n**FINAL**" as User #E3F2FD
+actor "**ADMINISTRADOR**\n**SISTEMA**" as Admin #FFEBEE
+actor "**GATEWAY**\n**PAGAMENTO**" as PaymentGW #E8F5E8
+actor "**SERVIÇO**\n**EMAIL**" as EmailService #FFF8E1
 
-rectangle "**SISTEMA: GESTÃO FINANCEIRA EMPRESARIAL**" {
+rectangle "**SISTEMA DE GESTÃO FINANCEIRA EMPRESARIAL**" {
     
-    package "**AUTENTICAÇÃO & USUÁRIOS**" {
-        usecase "**UC01**\nRegistrar Conta" as UC01
-        usecase "**UC02**\nAutenticar Usuário" as UC02
-        usecase "**UC03**\nRecuperar Senha" as UC03
-        usecase "**UC04**\nGerenciar Perfil" as UC04
+    package "**MÓDULO: AUTENTICAÇÃO & USUÁRIOS**" #E3F2FD {
+        usecase "**UC01**\n\nRegistrar\nNova Conta" as UC01
+        usecase "**UC02**\n\nAutenticar\nUsuário (JWT)" as UC02
+        usecase "**UC03**\n\nRecuperar\nSenha" as UC03
+        usecase "**UC04**\n\nGerenciar\nPerfil" as UC04
     }
     
-    package "**GESTÃO EMPRESARIAL**" {
-        usecase "**UC05**\nCadastrar Empresa" as UC05
-        usecase "**UC06**\nDefinir Empresa Padrão" as UC06
-        usecase "**UC07**\nValidar CNPJ" as UC07
+    package "**MÓDULO: GESTÃO EMPRESARIAL**" #E8F5E8 {
+        usecase "**UC05**\n\nCadastrar\nEmpresa" as UC05
+        usecase "**UC06**\n\nDefinir Empresa\nPadrão" as UC06
+        usecase "**UC07**\n\nValidar\nDados Empresa" as UC07
     }
     
-    package "**TRANSAÇÕES FINANCEIRAS**" {
-        usecase "**UC08**\nCriar Transação" as UC08
-        usecase "**UC09**\nCategorizar Transação" as UC09
-        usecase "**UC10**\nValidar Limites Plano" as UC10
-        usecase "**UC11**\nGerar Relatórios" as UC11
+    package "**MÓDULO: TRANSAÇÕES FINANCEIRAS**" #FFF3E0 {
+        usecase "**UC08**\n\nCriar\nTransação" as UC08
+        usecase "**UC09**\n\nCategorizar\nTransação" as UC09
+        usecase "**UC10**\n\nValidar Limites\ndo Plano" as UC10
+        usecase "**UC11**\n\nGerar\nRelatórios" as UC11
     }
     
-    package "**ASSINATURAS & PAGAMENTOS**" {
-        usecase "**UC12**\nVisualizar Planos" as UC12
-        usecase "**UC13**\nUpgrade de Plano" as UC13
-        usecase "**UC14**\nProcessar Pagamento" as UC14
-        usecase "**UC15**\nValidar Assinatura" as UC15
+    package "**MÓDULO: ASSINATURAS & PAGAMENTOS**" #F3E5F5 {
+        usecase "**UC12**\n\nVisualizar\nPlanos" as UC12
+        usecase "**UC13**\n\nUpgrade\nde Plano" as UC13
+        usecase "**UC14**\n\nProcessar\nPagamento" as UC14
+        usecase "**UC15**\n\nValidar\nAssinatura" as UC15
     }
     
-    package "**ADMINISTRAÇÃO**" {
-        usecase "**UC16**\nGerenciar Usuários" as UC16
-        usecase "**UC17**\nMonitorar Sistema" as UC17
-        usecase "**UC18**\nConfigurar Planos" as UC18
+    package "**MÓDULO: ADMINISTRAÇÃO**" #FFEBEE {
+        usecase "**UC16**\n\nGerenciar\nUsuários" as UC16
+        usecase "**UC17**\n\nMonitorar\nSistema" as UC17
+        usecase "**UC18**\n\nConfigurar\nPlanos" as UC18
     }
 }
 
-' Relacionamentos dos usuários
-User --> UC01
-User --> UC02
-User --> UC03
-User --> UC04
-User --> UC05
-User --> UC06
-User --> UC08
-User --> UC09
-User --> UC11
-User --> UC12
-User --> UC13
+' Posicionamento hierárquico dos atores
+User -[hidden]down- Admin
+Admin -[hidden]down- PaymentGW
+PaymentGW -[hidden]down- EmailService
 
-' Relacionamentos do administrador
-Admin --> UC16
-Admin --> UC17
-Admin --> UC18
-Admin --> UC07
-Admin --> UC15
+' Relacionamentos do Usuário Final
+User -down-> UC01 : **registra**
+User -down-> UC02 : **autentica**
+User -down-> UC03 : **solicita**
+User -down-> UC04 : **gerencia**
+User -down-> UC05 : **cadastra**
+User -down-> UC06 : **define**
+User -down-> UC08 : **cria**
+User -down-> UC09 : **categoriza**
+User -down-> UC11 : **solicita**
+User -down-> UC12 : **visualiza**
+User -down-> UC13 : **solicita**
 
-' Relacionamentos dos sistemas externos
-PaymentGW --> UC14
-EmailService --> UC03
+' Relacionamentos do Administrador
+Admin -down-> UC16 : **administra**
+Admin -down-> UC17 : **monitora**
+Admin -down-> UC18 : **configura**
+Admin -down-> UC07 : **valida**
+Admin -down-> UC15 : **verifica**
 
-' Dependências entre casos de uso
-UC02 ..> UC01 : <<extend>>
-UC08 ..> UC10 : <<include>>
-UC13 ..> UC14 : <<include>>
-UC05 ..> UC07 : <<include>>
+' Relacionamentos Sistemas Externos
+PaymentGW -down-> UC14 : **processa**
+EmailService -down-> UC03 : **envia**
 
-' Notas explicativas
-note right of UC10
-**REGRA CRÍTICA:**
-Verificar limites do plano
-antes de permitir transação
-end note
+' Dependências e Extensões (pontilhadas)
+UC02 .up.> UC01 : **<<extend>>**\n(se não cadastrado)
+UC08 .right.> UC10 : **<<include>>**\n(sempre verificar)
+UC13 .down.> UC14 : **<<include>>**\n(processar pagto)
+UC05 .right.> UC07 : **<<include>>**\n(validar dados)
+UC09 .up.> UC08 : **<<extend>>**\n(opcional)
 
-note bottom of UC14
-**INTEGRAÇÃO:**
-Gateway processa pagamento
-e notifica via webhook
-end note
+' Notas explicativas estratégicas
+note top of UC10 : **REGRA CRÍTICA**\nVerificar limites antes\nde criar transação
+
+note right of UC14 : **INTEGRAÇÃO**\nWebhook confirma\npagamento processado
+
+note left of UC02 : **SEGURANÇA**\nJWT tokens com\nrefresh automático
 
 @enduml

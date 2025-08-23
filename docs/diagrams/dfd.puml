@@ -1,89 +1,118 @@
 @startuml
+!theme plain
 title Diagrama de Fluxo de Dados - Nível 1
 
 ' Configurações profissionais
 skinparam defaultFontColor #000000
 skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 100
+
 skinparam usecase {
     BorderColor #2C3E50
     BackgroundColor #ECF0F1
-    FontSize 10
+    FontSize 11
     FontStyle bold
+    BorderThickness 2
 }
 skinparam database {
     BorderColor #27AE60
     BackgroundColor #E8F8F5
-    FontSize 10
+    FontSize 11
     FontStyle bold
+    BorderThickness 2
 }
 skinparam entity {
     BorderColor #E74C3C
     BackgroundColor #FADBD8
-    FontSize 11
+    FontSize 12
     FontStyle bold
+    BorderThickness 2
+}
+skinparam arrow {
+    Color #555555
+    FontColor #000000
+    FontSize 10
+    Thickness 2
 }
 
-' Layout
-top to bottom direction
+' Layout otimizado
+!define SPACING 120
+left to right direction
 
-' Entidades Externas
-entity "USUÁRIO\n(Cliente Final)" as User
-entity "GATEWAY\nPAGAMENTO" as PaymentGW
-entity "SERVIÇO\nEMAIL" as EmailSvc
+' Posicionamento estratégico dos elementos
 
-' Processos
-usecase "1.0\n\nAUTENTICAR\nUSUÁRIO\n\nValidar credenciais\ne gerar tokens JWT" as P1
-usecase "2.0\n\nGERENCIAR\nEMPRESAS\n\nCRUD empresas e\nvalidação CNPJ" as P2
-usecase "3.0\n\nPROCESSAR\nTRANSAÇÕES\n\nCriar, validar e\ncategorizar transações" as P3
-usecase "4.0\n\nCONTROLAR\nASSINATURAS\n\nGerenciar planos\ne limites" as P4
-usecase "5.0\n\nGERAR\nRELATÓRIOS\n\nDashboards e\nrelatórios financeiros" as P5
+' Entidades Externas (topo)
+entity "**USUÁRIO**\n(Cliente Final)" as User
+entity "**GATEWAY**\n**PAGAMENTO**" as PaymentGW
+entity "**SERVIÇO**\n**EMAIL**" as EmailSvc
 
-' Depósitos de dados
-database "D1: USUÁRIOS\n\n- ID, nome, email\n- Hash senha\n- Timestamps" as D1
-database "D2: EMPRESAS\n\n- CNPJ, razão social\n- Status, empresa padrão\n- Relacionamento usuário" as D2
-database "D3: TRANSAÇÕES\n\n- Valor, descrição, data\n- Categoria, forma pagto\n- Status, empresa_id" as D3
-database "D4: ASSINATURAS\n\n- Plano atual, status\n- Data início/fim\n- Uso atual vs limites" as D4
-database "D5: CATEGORIAS\n\n- Nome, cor, ícone\n- Tipo transação\n- Empresa vinculada" as D5
+' Processos (centro)
+usecase "**1.0**\n\n**AUTENTICAR**\n**USUÁRIO**\n\nValidar credenciais\ne gerar tokens JWT" as P1
+usecase "**2.0**\n\n**GERENCIAR**\n**EMPRESAS**\n\nCRUD empresas e\nvalidação dados" as P2
+usecase "**3.0**\n\n**PROCESSAR**\n**TRANSAÇÕES**\n\nCriar, validar e\ncategorizar transações" as P3
+usecase "**4.0**\n\n**CONTROLAR**\n**ASSINATURAS**\n\nGerenciar planos\ne limites" as P4
+usecase "**5.0**\n\n**GERAR**\n**RELATÓRIOS**\n\nDashboards e\nrelatórios financeiros" as P5
 
-' Fluxos de dados
-User --> P1 : 1) Credenciais\n(email + senha)
-P1 --> User : 2) Tokens JWT\n(access + refresh)
+' Depósitos de dados (base)
+database "**D1: USUÁRIOS**\n\n• ID, nome, email\n• Hash senha\n• Timestamps" as D1
+database "**D2: EMPRESAS**\n\n• Razão social\n• Status ativo\n• Relacionamento usuário" as D2
+database "**D3: TRANSAÇÕES**\n\n• Valor, descrição, data\n• Categoria, tipo\n• Status, usuário_id" as D3
+database "**D4: ASSINATURAS**\n\n• Plano atual, status\n• Data início/fim\n• Uso atual vs limites" as D4
+database "**D5: CATEGORIAS**\n\n• Nome, tipo transação\n• Usuário vinculado\n• Metadados" as D5
 
-P1 --> D1 : 3) Validar usuário
-D1 --> P1 : 4) Dados usuário
+' Layout hierárquico otimizado
+User -[hidden]- PaymentGW
+PaymentGW -[hidden]- EmailSvc
 
-User --> P2 : 5) Dados empresa\n(CNPJ, razão social)
-P2 --> D2 : 6) Gravar empresa
-D2 --> P2 : 7) Lista empresas
-P2 --> User : 8) Empresas\ncadastradas
+P1 -[hidden]- P2
+P2 -[hidden]- P3
+P3 -[hidden]- P4
+P4 -[hidden]- P5
 
-User --> P3 : 9) Nova transação\n(valor, descrição, categoria)
-P3 --> P4 : 10) Verificar limites\ndo plano
-P4 --> D4 : 11) Consultar assinatura
-D4 --> P4 : 12) Status + limites
-P4 --> P3 : 13) Autorização\n(OK/limite excedido)
+D1 -[hidden]- D2
+D2 -[hidden]- D3
+D3 -[hidden]- D4
+D4 -[hidden]- D5
 
-P3 --> D3 : 14) Gravar transação
-P3 --> D5 : 15) Buscar categoria
-D5 --> P3 : 16) Dados categoria
-P3 --> User : 17) Confirmação\ncriação
+' Fluxos de Autenticação
+User -down-> P1 : **1)** Credenciais\n(email + senha)
+P1 -up-> User : **2)** Tokens JWT\n(access + refresh)
+P1 -down-> D1 : **3)** Validar usuário
+D1 -up-> P1 : **4)** Dados usuário
 
-User --> P5 : 18) Solicitar relatório\n(período, filtros)
-P5 --> D3 : 19) Consultar transações
-D3 --> P5 : 20) Dados históricos
-P5 --> D2 : 21) Dados empresa
-D2 --> P5 : 22) Info empresa
-P5 --> User : 23) Relatório\ngerado
+' Fluxos de Gestão de Empresas
+User -down-> P2 : **5)** Dados empresa\n(razão social)
+P2 -down-> D2 : **6)** Gravar empresa
+D2 -up-> P2 : **7)** Lista empresas
+P2 -up-> User : **8)** Empresas\ncadastradas
 
-PaymentGW --> P4 : 24) Webhook\nconfirmação pagto
-P4 --> D4 : 25) Atualizar\nassinatura
+' Fluxos de Transações
+User -down-> P3 : **9)** Nova transação\n(valor, descrição)
+P3 -right-> P4 : **10)** Verificar limites\ndo plano
+P4 -down-> D4 : **11)** Consultar assinatura
+D4 -up-> P4 : **12)** Status + limites
+P4 -left-> P3 : **13)** Autorização\n(OK/limite excedido)
+P3 -down-> D3 : **14)** Gravar transação
+P3 -down-> D5 : **15)** Buscar categoria
+D5 -up-> P3 : **16)** Dados categoria
+P3 -up-> User : **17)** Confirmação\ncriação
 
-P1 --> EmailSvc : 26) Enviar email\nrecuperação senha
-EmailSvc --> User : 27) Email\ncom link reset
+' Fluxos de Relatórios
+User -down-> P5 : **18)** Solicitar relatório\n(período, filtros)
+P5 -down-> D3 : **19)** Consultar transações
+D3 -up-> P5 : **20)** Dados históricos
+P5 -down-> D2 : **21)** Dados empresa
+D2 -up-> P5 : **22)** Info empresa
+P5 -up-> User : **23)** Relatório\ngerado
 
-' Agrupamento visual
-together { P1; P2 }
-together { P3; P4; P5 }
-together { D1; D2; D3; D4; D5 }
+' Fluxos de Integrações Externas
+PaymentGW -down-> P4 : **24)** Webhook\nconfirmação pagto
+P4 -down-> D4 : **25)** Atualizar\nassinatura
+P1 -right-> EmailSvc : **26)** Enviar email\nrecuperação senha
+EmailSvc -up-> User : **27)** Email\ncom link reset
 
 @enduml

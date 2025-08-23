@@ -1,74 +1,105 @@
 @startuml IDEF0_Level1
+!theme plain
 title IDEF0 - Nível 1: Decomposição Funcional do Sistema
-' Configurações profissionais
+
+' Configurações profissionais otimizadas
 skinparam defaultFontColor #000000
 skinparam backgroundColor white
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 100
+
 skinparam rectangle {
-    BorderColor #333333
-    FontSize 10
+    BorderColor #2C3E50
+    FontSize 11
     FontStyle bold
+    BorderThickness 2
+}
+skinparam package {
+    BorderColor #34495E
+    BackgroundColor #F8F9FA
+    FontSize 12
+    FontStyle bold
+    BorderThickness 2
 }
 skinparam arrow {
-    Color #555555
+    Color #34495E
     FontColor #000000
-    FontSize 9
+    FontSize 10
+    FontStyle bold
+    Thickness 2
 }
 
-' Layout otimizado
+' Layout horizontal otimizado
 left to right direction
 
-' Entradas principais
-rectangle "**ENTRADAS**\n• Dados de registro\n• Credenciais\n• Info. empresas\n• Transações" as MainInputs #FFF2E8
+' Entradas (esquerda)
+rectangle "**ENTRADAS (I)**\n\n● Dados Registro\n● Credenciais Login\n● Info Empresas\n● Transações\n● Solicit. Upgrade" as MainInputs #FFF3E0
 
-' Processos decompostos (A1-A4)
-package "PROCESSOS PRINCIPAIS" {
-    rectangle "**A1**\n\n**GERENCIAR**\n**USUÁRIOS**\n\n• Cadastro\n• Autenticação\n• Recuperação senha\n• Perfis" as A1 #E8F4FD
-    
-    rectangle "**A2**\n\n**GERENCIAR**\n**EMPRESAS**\n\n• CNPJ validation\n• Múltiplas empresas\n• Empresa padrão\n• Status ativo" as A2 #F0F8E8
-    
-    rectangle "**A3**\n\n**PROCESSAR**\n**TRANSAÇÕES**\n\n• Criação\n• Validação\n• Categorização\n• Persistência" as A3 #FFF0F8
-    
-    rectangle "**A4**\n\n**CONTROLAR**\n**ASSINATURAS**\n\n• Planos\n• Limites\n• Pagamentos\n• Upgrades" as A4 #F8F0E8
-}
+' Controles (topo)
+rectangle "**CONTROLES (C)**\n\n● Políticas Segurança\n● Regras Negócio\n● Validações\n● Compliance" as Controls #E3F2FD
 
-' Saídas específicas
-rectangle "**SAÍDAS**\n• Tokens JWT\n• Empresas ativas\n• Transações valid.\n• Relatórios\n• Status pagamento" as MainOutputs #E8F8F8
+' Processos A1-A4 (centro horizontal)
+rectangle "**A1**\n\n**GERENCIAR**\n**USUÁRIOS**\n\n▪ Registro/Login\n▪ Autenticação JWT\n▪ Recuperação Senha\n▪ Gestão Perfis" as A1 #E8F4FD
 
-' Controles distribuídos
-rectangle "**CONTROLES**\n• Políticas segurança\n• Regras negócio\n• Validações\n• Compliance" as Controls #F5F5F5
+rectangle "**A2**\n\n**GERENCIAR**\n**EMPRESAS**\n\n▪ Cadastro Empresas\n▪ Validação Dados\n▪ Múltiplas Empresas\n▪ Empresa Ativa" as A2 #E8F5E8
 
-' Mecanismos
-rectangle "**MECANISMOS**\n• Django REST API\n• PostgreSQL DB\n• JWT tokens\n• Payment gateway\n• Email service" as Mechanisms #EEEEEE
+rectangle "**A3**\n\n**PROCESSAR**\n**TRANSAÇÕES**\n\n▪ Criação/Edição\n▪ Validação Limites\n▪ Categorização\n▪ Persistência BD" as A3 #FFF0F8
 
-' Fluxos principais
-MainInputs --> A1 : dados usuário
-A1 --> A2 : usuário autenticado
-A2 --> A3 : contexto empresa
-A3 --> A4 : verificar limites
-A4 --> MainOutputs : status/resultados
+rectangle "**A4**\n\n**CONTROLAR**\n**ASSINATURAS**\n\n▪ Gestão Planos\n▪ Controle Limites\n▪ Processamento Pagto\n▪ Upgrades Automáticos" as A4 #FFF8E1
 
-' Controles e mecanismos
-Controls --> A1
-Controls --> A2  
-Controls --> A3
-Controls --> A4
+' Saídas (direita)
+rectangle "**SAÍDAS (O)**\n\n● Tokens JWT\n● Empresas Ativas\n● Transações Valid.\n● Relatórios\n● Status Assinat." as MainOutputs #F3E5F5
 
-A1 --> Mechanisms
-A2 --> Mechanisms
-A3 --> Mechanisms
-A4 --> Mechanisms
+' Mecanismos (base)
+rectangle "**MECANISMOS (M)**\n\n● Django REST\n● PostgreSQL\n● JWT System\n● Payment Gateway\n● Email Service" as Mechanisms #ECEFF1
 
-' Fluxos de dados internos
-A1 ..> A3 : perfil usuário
-A2 ..> A4 : dados empresa
-A4 ..> A3 : limites plano
+' Layout horizontal IDEF0
+MainInputs -[hidden]right- A1
+A1 -[hidden]right- A2
+A2 -[hidden]right- A3
+A3 -[hidden]right- A4
+A4 -[hidden]right- MainOutputs
 
-note as ProcessNote
+Controls -[hidden]down- A2
+A2 -[hidden]down- Mechanisms
+
+' Fluxos ICOM padrão IDEF0
+' Entradas (I)
+MainInputs -right-> A1 : **Dados**\n**Usuário**
+A1 -right-> A2 : **Usuário**\n**Autenticado**
+A2 -right-> A3 : **Contexto**\n**Empresa**
+A3 -right-> A4 : **Verificar**\n**Limites**
+A4 -right-> MainOutputs : **Resultados**\n**Processados**
+
+' Controles (C)
+Controls -down-> A1 : **Políticas**
+Controls -down-> A2 : **Regras**
+Controls -down-> A3 : **Validações**
+Controls -down-> A4 : **Compliance**
+
+' Mecanismos (M)
+A1 -down-> Mechanisms : **Utiliza**
+A2 -down-> Mechanisms : **Utiliza**
+A3 -down-> Mechanisms : **Utiliza**
+A4 -down-> Mechanisms : **Utiliza**
+
+' Fluxos internos (pontilhados)
+A1 -.down.> A3 : **Perfil**
+A2 -.down.> A4 : **Empresa**
+A4 -.up.> A3 : **Limites**
+
+' Legenda IDEF0
+legend right
 **DECOMPOSIÇÃO A-0:**
-A1: Autenticação e gestão de usuários
-A2: Gestão de múltiplas empresas por usuário
-A3: Core de processamento de transações
-A4: Controle de assinaturas e limites
-end note
+**A1:** Gerenciar Usuários
+**A2:** Gerenciar Empresas  
+**A3:** Processar Transações
+**A4:** Controlar Assinaturas
+
+**Fluxo:** A1→A2→A3→A4
+endlegend
 
 @enduml
