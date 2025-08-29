@@ -1,0 +1,62 @@
+@startuml Authentication Flow Sequence
+title Fluxo de Autenticação - Django REST API
+
+actor "Cliente" as client
+participant "Django URLs" as urls
+participant "Authentication Views" as views
+participant "Serializers" as serializers
+participant "Models" as models
+participant "Database" as db
+participant "Token Auth" as token
+
+== Registro de Usuário ==
+client -> urls : POST /api/auth/register/\n{username, email, password, ...}
+urls -> views : RegisterView
+views -> serializers : UserRegistrationSerializer.validate()
+serializers -> serializers : Validar dados
+serializers -> models : User.objects.create_user()
+models -> db : INSERT INTO users
+db -> models : user_id
+models -> serializers : user_instance
+serializers -> views : validated_data
+views -> token : create_token(user)
+token -> db : INSERT INTO auth_tokens
+token -> views : token_string
+views -> client : 201 Created\n{user_data, token}
+
+== Login de Usuário ==
+client -> urls : POST /api/auth/login/\n{email, password}
+urls -> views : LoginView
+views -> serializers : UserLoginSerializer.validate()
+serializers -> models : authenticate(email, password)
+models -> db : SELECT FROM users WHERE email=?
+db -> models : user_data
+models -> serializers : user_instance
+serializers -> views : validated_data
+views -> token : get_or_create_token(user)
+token -> db : SELECT/INSERT auth_tokens
+token -> views : token_string
+views -> client : 200 OK\n{user_data, token}
+
+== Acesso a Perfil (Autenticado) ==
+client -> urls : GET /api/auth/profile/\nAuthorization: Token abc123
+urls -> views : UserProfileView
+views -> token : authenticate_token(abc123)
+token -> db : SELECT FROM auth_tokens WHERE key=?
+db -> token : token_data
+token -> models : get_user(token.user_id)
+models -> views : user_instance
+views -> serializers : UserProfileSerializer(user)
+serializers -> views : serialized_data
+views -> client : 200 OK\n{profile_data}
+
+== Logout ==
+client -> urls : POST /api/auth/logout/\nAuthorization: Token abc123
+urls -> views : LogoutView
+views -> token : authenticate_token(abc123)
+token -> db : DELETE FROM auth_tokens WHERE key=?
+db -> token : success
+token -> views : logout_success
+views -> client : 200 OK\n{message: "Logged out"}
+
+@enduml

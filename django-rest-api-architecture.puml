@@ -1,0 +1,174 @@
+@startuml django-architecture
+' Título do Diagrama
+title Arquitetura Django REST API - Sistema de Gestão Financeira
+
+' Configurações de Aparência para um visual mais limpo e moderno
+!theme vibrant
+skinparam component {
+    ArrowColor #555555
+    BorderColor #555555
+    BackgroundColor #F8F8F8
+    FontColor #000000
+}
+skinparam package {
+    BorderColor #2C3E50
+    BackgroundColor #ECF0F1
+    FontStyle bold
+    BorderThickness 2
+}
+skinparam database {
+    BorderColor #E67E22
+    BackgroundColor #FDF2E9
+    FontColor #000000
+}
+skinparam roundcorner 10
+skinparam shadowing false
+skinparam defaultFontColor #000000
+skinparam linetype ortho
+
+' ==================================================
+' CAMADAS DA ARQUITETURA DJANGO
+' ==================================================
+
+package "**FRONTEND**" #DDFFDD {
+    component [React Native App] as mobile_app
+    note right of mobile_app
+        **Cliente Mobile:**
+        • Interface do usuário
+        • Autenticação JWT
+        • Offline-first com sync
+    end note
+}
+
+package "**DJANGO REST API**" #DDEEFF {
+    
+    ' Camada de Roteamento
+    component [urls.py\n(URL Routing)] as urls
+    
+    ' Middleware Django
+    component [Django Middleware] as middleware
+    note right of middleware
+        **Middlewares Ativos:**
+        • CORS Headers
+        • JWT Authentication
+        • Rate Limiting
+        • Request Logging
+    end note
+    
+    package "**APPS DJANGO**" {
+        
+        package "**authentication/**" #E6FFE6 {
+            component [views.py\n(ViewSets)] as AuthViews
+            component [serializers.py\n(DRF)] as AuthSerializer
+            component [models.py\n(User, Profile)] as AuthModels
+            component [services.py\n(Business Logic)] as AuthService
+        }
+        
+        package "**companies/**" #FFE6E6 {
+            component [views.py\n(CRUD)] as CompanyViews
+            component [serializers.py\n(Validation)] as CompanySerializer
+            component [models.py\n(Company)] as CompanyModels
+            component [services.py\n(Logic)] as CompanyService
+        }
+        
+        package "**transactions/**" #FFFACD {
+            component [views.py\n(API Endpoints)] as TransactionViews
+            component [serializers.py\n(Data Format)] as TransactionSerializer
+            component [models.py\n(Transaction)] as TransactionModels
+            component [services.py\n(Validations)] as TransactionService
+        }
+        
+        package "**subscriptions/**" #F0E6FF {
+            component [views.py\n(Plans API)] as SubscriptionViews
+            component [serializers.py\n(Payment Data)] as SubscriptionSerializer
+            component [models.py\n(Plan, Subscription)] as SubscriptionModels
+            component [services.py\n(Payment Logic)] as SubscriptionService
+        }
+        
+        package "**invoices/**" #E6F3FF {
+            component [views.py\n(File Upload)] as InvoiceViews
+            component [serializers.py\n(File Validation)] as InvoiceSerializer
+            component [models.py\n(Invoice, Supplier)] as InvoiceModels
+            component [services.py\n(OCR/XML Processing)] as InvoiceService
+        }
+    }
+    
+    package "**SHARED/CORE**" #F5F5F5 {
+        component [settings.py\n(Configuration)] as settings
+        component [permissions.py\n(Custom Perms)] as permissions
+        component [exceptions.py\n(Error Handling)] as exceptions
+        component [utils.py\n(Helpers)] as utils
+    }
+}
+
+package "**INFRAESTRUTURA**" #FFEECC {
+    database "PostgreSQL" {
+        component [auth_user] as users_table
+        component [companies_company] as companies_table
+        component [transactions_transaction] as transactions_table
+        component [subscriptions_plan] as plans_table
+        component [invoices_invoice] as invoices_table
+    }
+    
+    component [Redis Cache] as redis
+    component [Celery Queue] as celery
+    component [File Storage\n(AWS S3/Local)] as storage
+}
+
+package "**SERVIÇOS EXTERNOS**" #E8F8E8 {
+    component [Payment Gateway\n(Stripe/PagSeguro)] as payment_gw
+    component [Email Service\n(SendGrid/AWS SES)] as email_service
+    component [OCR Service\n(Tesseract/AWS)] as ocr_service
+}
+
+' ==================================================
+' FLUXOS DE DADOS E CONEXÕES
+' ==================================================
+
+' Entrada das requisições
+mobile_app --> urls : "HTTP Requests\n(REST API)"
+urls --> middleware : "Route Resolution"
+
+' Roteamento para os apps
+middleware --> AuthViews : "auth/ endpoints"
+middleware --> CompanyViews : "companies/ endpoints"
+middleware --> TransactionViews : "transactions/ endpoints"
+middleware --> SubscriptionViews : "subscriptions/ endpoints"
+middleware --> InvoiceViews : "invoices/ endpoints"
+
+' Fluxo interno dos apps (exemplo Authentication)
+AuthViews --> AuthSerializer : "Data Validation"
+AuthViews --> AuthService : "Business Logic"
+AuthService --> AuthModels : "ORM Operations"
+AuthModels --> users_table : "Database Queries"
+
+' Fluxo interno das Transações
+TransactionViews --> TransactionSerializer
+TransactionViews --> TransactionService
+TransactionService --> TransactionModels
+TransactionModels --> transactions_table
+
+' Conexões com serviços compartilhados
+AuthService --> permissions : "Authorization"
+TransactionService --> utils : "Helper Functions"
+InvoiceService --> storage : "File Upload"
+InvoiceService --> celery : "Background Processing"
+InvoiceService --> ocr_service : "Document Processing"
+
+' Conexões com infraestrutura
+AuthService --> redis : "Session Cache"
+SubscriptionService --> payment_gw : "Payment Processing"
+AuthService --> email_service : "Password Reset"
+
+' Relacionamentos entre modelos
+CompanyModels --> users_table : "Foreign Key"
+TransactionModels --> companies_table : "Foreign Key"
+InvoiceModels --> companies_table : "Foreign Key"
+
+' Processamento assíncrono
+celery --> InvoiceService : "Background Tasks"
+celery --> email_service : "Email Queue"
+
+@enduml
+
+@enduml
