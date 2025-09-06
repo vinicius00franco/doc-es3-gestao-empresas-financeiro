@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    env_file:
+      - .env.prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  web1: &web
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.prod
+    env_file:
+      - .env.prod
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  web2:
+    <<: *web
+
+  web3:
+    <<: *web
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      - web1
+      - web2
+      - web3
+    restart: unless-stopped
+
+  celery:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.prod
+    command: celery -A core worker -l info
+    env_file:
+      - .env.prod
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.prod
+    command: celery -A core beat -l info
+    env_file:
+      - .env.prod
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
