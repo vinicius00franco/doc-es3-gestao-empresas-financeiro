@@ -1,0 +1,37 @@
+@startuml notas_fiscais
+!theme plain
+skinparam backgroundColor #F5F9FC
+skinparam linetype ortho
+
+title Domínio Notas Fiscais
+
+rectangle "Usuário" as User
+rectangle "Receita Federal" as Receita
+
+circle "Upload NF" as P1 #B8D9A8
+circle "Extrair Dados" as P2 #B8D9A8
+circle "Criar Transação" as P3 #B8D9A8
+
+rectangle "D1 | Notas Fiscais" as D1 #FFE8A6
+rectangle "D2 | Fornecedores" as D2 #FFE8A6
+rectangle "D3 | Transacoes" as D3 #FFE8A6
+
+User -> P1 : arquivo_nf
+P1 -> D1 : armazenar
+P1 -> Receita : validar_nf
+Receita -> P1 : validacao
+
+P1 -> P2 : acionar_extracao
+P2 -> D1 : atualizar_dados
+P2 -> D2 : criar/associar_fornecedor
+P2 -> P3 : gerar_transacao
+
+P3 -> D3 : salvar_transacao
+P3 -> D1 : vincular_transacao
+P3 -> User : nf_processada
+
+legend right
+<b>Legenda</b>\nP1 Upload | P2 Extração | P3 Criação de Transação\nReceita = validação externa | D1..D3 depósitos
+endlegend
+
+@enduml

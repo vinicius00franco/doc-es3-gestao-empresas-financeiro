@@ -1,0 +1,48 @@
+@startuml autenticacao
+!theme plain
+skinparam backgroundColor #F5F9FC
+skinparam linetype ortho
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+title Domínio Autenticação / Usuários
+
+rectangle "Usuário" as User
+rectangle "Email Service" as EmailExt #F9D7A6
+
+circle "Login" as P1 #B8D9A8
+circle "Gerenciar Configurações" as P2 #B8D9A8
+circle "Recuperar Senha" as P3 #B8D9A8
+circle "Registrar Usuário" as P4 #B8D9A8
+
+rectangle "D1 | Usuarios" as D1 #FFE8A6
+rectangle "D2 | Configuracoes" as D2 #FFE8A6
+rectangle "D3 | TokensRecuperacao" as D3 #FFE8A6
+rectangle "D4 | LogsAtividade" as D4 #FFE8A6
+
+User -> P1 : credenciais
+P1 -> D1 : validar
+P1 -> User : token JWT
+P1 -> D4 : log_login
+
+User -> P4 : dados_registro
+P4 -> D1 : criar_usuario
+P4 -> User : confirmacao
+
+User -> P2 : atualizar_prefs
+P2 -> D2 : salvar_config
+P2 -> User : config_atualizada
+
+User -> P3 : email_recuperacao
+P3 -> D3 : gerar_token
+P3 -> EmailExt : enviar_link
+EmailExt -> User : link_recuperacao
+
+P3 -> D1 : validar_token
+P3 -> D1 : redefinir_senha
+
+legend right
+<b>Legenda</b>\nCírculo=Processo | Retângulo laranja=Sistema Externo | Retângulo amarelo=Dados\nSetas representam fluxos de dados/ações
+endlegend
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml assinaturas
+!theme plain
+skinparam backgroundColor #F5F9FC
+skinparam linetype ortho
+
+title Domínio Assinaturas (Placeholder)
+
+rectangle "Usuário" as User
+rectangle "Gateway Pagamento" as Pay
+
+circle "Contratar Plano" as P1 #B8D9A8
+circle "Alterar Plano" as P2 #B8D9A8
+circle "Cancelar" as P3 #B8D9A8
+circle "Verificar Limites" as P4 #B8D9A8
+
+rectangle "D1 | Assinaturas" as D1 #FFE8A6
+rectangle "D2 | Planos" as D2 #FFE8A6
+
+User -> P1 : selecionar_plano
+P1 -> D1 : criar_assinatura
+P1 -> D2 : consultar_plano
+P1 -> Pay : iniciar_cobranca
+Pay -> P1 : confirmacao
+
+User -> P2 : novo_plano
+P2 -> D1 : atualizar
+P2 -> D2 : consultar
+
+User -> P3 : solicitar_cancelamento
+P3 -> D1 : encerrar
+
+P4 -> D1 : ler_assinatura
+P4 -> D2 : limites_plano
+
+legend right
+<b>Legenda</b>\nP1/P2/P3/P4 processos de ciclo de vida da assinatura\nD1 Assinaturas | D2 Planos | Pay gateway externo
+endlegend
+
+@enduml

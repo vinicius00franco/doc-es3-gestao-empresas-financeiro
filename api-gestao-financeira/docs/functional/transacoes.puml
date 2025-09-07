@@ -1,0 +1,44 @@
+@startuml transacoes
+!theme plain
+skinparam backgroundColor #F5F9FC
+skinparam linetype ortho
+
+title Domínio Transações / Categorias / Fornecedores
+
+rectangle "Usuário" as User
+rectangle "NF-e Processor" as NFe
+
+circle "Criar Transação" as P1 #B8D9A8
+circle "Listar Transações" as P2 #B8D9A8
+circle "Gerenciar Categorias" as P3 #B8D9A8
+circle "Gerenciar Fornecedores" as P4 #B8D9A8
+
+rectangle "D1 | Transacoes" as D1 #FFE8A6
+rectangle "D2 | Categorias" as D2 #FFE8A6
+rectangle "D3 | Fornecedores" as D3 #FFE8A6
+
+User -> P1 : dados_transacao
+P1 -> D1 : salvar
+P1 -> User : transacao_ok
+
+User -> P2 : filtros
+P2 -> D1 : consultar
+P2 -> User : lista_transacoes
+
+User -> P3 : operacao_categoria
+P3 -> D2 : manter
+P3 -> User : categoria_ok
+
+User -> P4 : operacao_fornecedor
+P4 -> D3 : manter
+P4 -> User : fornecedor_ok
+
+NFe -> P1 : transacao_nf
+P1 -> D2 : categorizar?(lookup)
+P1 -> D3 : fornecedor_auto?(lookup)
+
+legend right
+<b>Legenda</b>\nP1..P4 Processos | D1..D3 DataStores | NFe origem externa\nlookup = consulta/associação opcional
+endlegend
+
+@enduml

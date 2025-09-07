@@ -1,0 +1,36 @@
+@startuml empresas
+!theme plain
+skinparam backgroundColor #F5F9FC
+skinparam linetype ortho
+
+title Domínio Empresas
+
+rectangle "Usuário" as User
+circle "Criar Empresa" as P1 #B8D9A8
+circle "Editar Empresa" as P2 #B8D9A8
+circle "Definir Padrão" as P3 #B8D9A8
+circle "Listar Empresas" as P4 #B8D9A8
+
+rectangle "D1 | Empresas" as D1 #FFE8A6
+
+User -> P1 : dados_empresa
+P1 -> D1 : criar
+P1 -> User : empresa_criada
+
+User -> P2 : atualizar_dados
+P2 -> D1 : atualizar
+P2 -> User : empresa_atualizada
+
+User -> P3 : selecionar_empresa
+P3 -> D1 : marcar_padrao
+P3 -> User : padrao_definido
+
+User -> P4 : listar
+P4 -> D1 : consultar
+P4 -> User : lista_empresas
+
+legend right
+<b>Legenda</b>\nProcessos (círculos) manipulam D1 (Empresas)\nUsuário inicia operações
+endlegend
+
+@enduml

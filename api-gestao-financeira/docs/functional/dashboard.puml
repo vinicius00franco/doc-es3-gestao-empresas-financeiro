@@ -1,0 +1,27 @@
+@startuml dashboard
+!theme plain
+skinparam backgroundColor #F5F9FC
+skinparam linetype ortho
+
+title Domínio Dashboard (Placeholder)
+
+rectangle "Usuário" as User
+circle "Gerar Indicadores" as P1 #B8D9A8
+
+rectangle "D1 | Transacoes" as D1 #FFE8A6
+rectangle "D2 | Notas" as D2 #FFE8A6
+rectangle "D3 | Empresas" as D3 #FFE8A6
+rectangle "D4 | Assinaturas" as D4 #FFE8A6
+
+User -> P1 : filtros
+P1 -> D1 : ler_transacoes
+P1 -> D2 : ler_notas
+P1 -> D3 : ler_empresas
+P1 -> D4 : validar_limites
+P1 -> User : indicadores
+
+legend right
+<b>Legenda</b>\nP1 gera agregações lendo D1..D4\nFluxos somente leitura exceto validação de limites
+endlegend
+
+@enduml
