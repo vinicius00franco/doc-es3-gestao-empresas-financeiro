@@ -1,0 +1,56 @@
+### Listar categorias
+GET http://localhost:8000/api/v1/categorias/
+Authorization: Bearer {{access_token}}
+
+### Listar categorias por tipo
+GET http://localhost:8000/api/v1/categorias/?tipo_transacao=entrada
+Authorization: Bearer {{access_token}}
+
+### Criar categoria de entrada
+POST http://localhost:8000/api/v1/categorias/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "nome": "Vendas",
+  "descricao": "Receitas de vendas",
+  "cor": "#28a745",
+  "icone": "shopping-cart",
+  "tipo_transacao": "entrada",
+  "categoria_padrao": true
+}
+
+### Criar categoria de saída
+POST http://localhost:8000/api/v1/categorias/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "nome": "Fornecedores",
+  "descricao": "Pagamentos a fornecedores",
+  "cor": "#dc3545",
+  "icone": "truck",
+  "tipo_transacao": "saida"
+}
+
+### Buscar categoria por ID
+GET http://localhost:8000/api/v1/categorias/1/
+Authorization: Bearer {{access_token}}
+
+### Atualizar categoria
+PUT http://localhost:8000/api/v1/categorias/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "nome": "Vendas Online",
+  "descricao": "Receitas de vendas online",
+  "cor": "#007bff",
+  "icone": "globe",
+  "tipo_transacao": "entrada",
+  "ativa": true
+}
+
+### Deletar categoria
+DELETE http://localhost:8000/api/v1/categorias/1/
+Authorization: Bearer {{access_token}}

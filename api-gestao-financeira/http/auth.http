@@ -1,0 +1,57 @@
+### Registro de usuário
+POST http://localhost:8000/api/v1/auth/register/
+Content-Type: application/json
+
+{
+  "nome": "João Silva",
+  "email": "joao@exemplo.com",
+  "password": "senha123456",
+  "password_confirm": "senha123456"
+}
+
+### Login
+POST http://localhost:8000/api/v1/auth/login/
+Content-Type: application/json
+
+{
+  "email": "joao@exemplo.com",
+  "password": "senha123456"
+}
+
+### Refresh Token
+POST http://localhost:8000/api/v1/auth/refresh/
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refresh_token}}"
+}
+
+### Perfil do usuário
+GET http://localhost:8000/api/v1/users/profile/
+Authorization: Bearer {{access_token}}
+
+### Atualizar perfil
+PUT http://localhost:8000/api/v1/users/profile/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "nome": "João Silva Santos",
+  "email": "joao.santos@exemplo.com"
+}
+
+### Configurações do usuário
+GET http://localhost:8000/api/v1/users/configuracao/
+Authorization: Bearer {{access_token}}
+
+### Atualizar configurações
+PUT http://localhost:8000/api/v1/users/configuracao/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "tema": "escuro",
+  "moeda": "BRL",
+  "formato_data": "DD/MM/YYYY",
+  "notificacoes_email": true
+}

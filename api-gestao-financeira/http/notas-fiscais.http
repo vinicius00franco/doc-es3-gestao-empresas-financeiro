@@ -1,0 +1,23 @@
+### Upload de nota fiscal
+POST http://localhost:8000/api/v1/notas-fiscais/upload/
+Authorization: Bearer {{access_token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="arquivo"; filename="nota_fiscal.xml"
+Content-Type: application/xml
+
+< ./exemplo_nota_fiscal.xml
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Listar notas fiscais
+GET http://localhost:8000/api/v1/notas-fiscais/
+Authorization: Bearer {{access_token}}
+
+### Status de nota fiscal específica
+GET http://localhost:8000/api/v1/notas-fiscais/1/status/
+Authorization: Bearer {{access_token}}
+
+### Buscar nota fiscal por ID
+GET http://localhost:8000/api/v1/notas-fiscais/1/
+Authorization: Bearer {{access_token}}

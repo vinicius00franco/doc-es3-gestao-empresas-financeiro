@@ -1,0 +1,51 @@
+### Listar assinaturas
+GET http://localhost:8000/api/v1/assinaturas/
+Authorization: Bearer {{access_token}}
+
+### Criar assinatura
+POST http://localhost:8000/api/v1/assinaturas/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "nome": "Netflix",
+  "descricao": "Streaming de vídeos",
+  "valor": 29.90,
+  "periodicidade": "mensal",
+  "data_inicio": "2025-01-01",
+  "categoria": 1,
+  "ativa": true
+}
+
+### Buscar assinatura por ID
+GET http://localhost:8000/api/v1/assinaturas/1/
+Authorization: Bearer {{access_token}}
+
+### Atualizar assinatura
+PUT http://localhost:8000/api/v1/assinaturas/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "nome": "Netflix Premium",
+  "descricao": "Streaming de vídeos - Plano Premium",
+  "valor": 39.90,
+  "periodicidade": "mensal",
+  "data_inicio": "2025-01-01",
+  "categoria": 1,
+  "ativa": true
+}
+
+### Cancelar assinatura
+PATCH http://localhost:8000/api/v1/assinaturas/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "ativa": false,
+  "data_cancelamento": "2025-01-20"
+}
+
+### Deletar assinatura
+DELETE http://localhost:8000/api/v1/assinaturas/1/
+Authorization: Bearer {{access_token}}

@@ -1,0 +1,61 @@
+### Listar transações
+GET http://localhost:8000/api/v1/transacoes/
+Authorization: Bearer {{access_token}}
+
+### Listar transações com filtros
+GET http://localhost:8000/api/v1/transacoes/?tipo_transacao=entrada&data_inicio=2025-01-01&data_fim=2025-01-31
+Authorization: Bearer {{access_token}}
+
+### Criar transação de entrada
+POST http://localhost:8000/api/v1/transacoes/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "descricao": "Venda de produto",
+  "valor": 1500.00,
+  "data_transacao": "2025-01-20",
+  "tipo_transacao": "entrada",
+  "forma_pagamento": "pix",
+  "categoria": 1,
+  "observacoes": "Pagamento via PIX"
+}
+
+### Criar transação de saída
+POST http://localhost:8000/api/v1/transacoes/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "descricao": "Compra de material",
+  "valor": 500.00,
+  "data_transacao": "2025-01-20",
+  "tipo_transacao": "saida",
+  "forma_pagamento": "cartao_credito",
+  "categoria": 2,
+  "fornecedor": 1,
+  "numero_documento": "NF-001"
+}
+
+### Buscar transação por ID
+GET http://localhost:8000/api/v1/transacoes/1/
+Authorization: Bearer {{access_token}}
+
+### Atualizar transação
+PUT http://localhost:8000/api/v1/transacoes/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "descricao": "Venda de produto - Atualizada",
+  "valor": 1600.00,
+  "data_transacao": "2025-01-20",
+  "tipo_transacao": "entrada",
+  "forma_pagamento": "pix",
+  "categoria": 1,
+  "status": "confirmada"
+}
+
+### Deletar transação
+DELETE http://localhost:8000/api/v1/transacoes/1/
+Authorization: Bearer {{access_token}}

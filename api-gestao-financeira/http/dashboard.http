@@ -1,0 +1,11 @@
+### Dashboard resumo (últimos 30 dias)
+GET http://localhost:8000/api/v1/dashboard/resumo/
+Authorization: Bearer {{access_token}}
+
+### Dashboard com período específico
+GET http://localhost:8000/api/v1/dashboard/resumo/?data_inicio=2025-01-01&data_fim=2025-01-31
+Authorization: Bearer {{access_token}}
+
+### Dashboard com filtro de mês atual
+GET http://localhost:8000/api/v1/dashboard/resumo/?data_inicio=2025-01-01&data_fim=2025-01-31
+Authorization: Bearer {{access_token}}

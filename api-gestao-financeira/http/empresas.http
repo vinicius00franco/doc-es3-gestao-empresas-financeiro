@@ -1,0 +1,46 @@
+### Listar empresas
+GET http://localhost:8000/api/v1/empresas/
+Authorization: Bearer {{access_token}}
+
+### Criar empresa
+POST http://localhost:8000/api/v1/empresas/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "cnpj": "12.345.678/0001-90",
+  "razao_social": "Minha Empresa LTDA",
+  "nome_fantasia": "Minha Empresa",
+  "tipo_empresa": "LTDA",
+  "empresa_padrao": true
+}
+
+### Buscar empresa por ID
+GET http://localhost:8000/api/v1/empresas/1/
+Authorization: Bearer {{access_token}}
+
+### Atualizar empresa
+PUT http://localhost:8000/api/v1/empresas/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "cnpj": "12.345.678/0001-90",
+  "razao_social": "Minha Empresa LTDA - Atualizada",
+  "nome_fantasia": "Minha Empresa",
+  "tipo_empresa": "LTDA",
+  "ativa": true
+}
+
+### Atualizar parcialmente empresa
+PATCH http://localhost:8000/api/v1/empresas/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "nome_fantasia": "Novo Nome Fantasia"
+}
+
+### Deletar empresa
+DELETE http://localhost:8000/api/v1/empresas/1/
+Authorization: Bearer {{access_token}}

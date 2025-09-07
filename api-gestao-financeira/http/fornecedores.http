@@ -1,0 +1,40 @@
+### Listar fornecedores
+GET http://localhost:8000/api/v1/fornecedores/
+Authorization: Bearer {{access_token}}
+
+### Criar fornecedor
+POST http://localhost:8000/api/v1/fornecedores/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "cnpj": "98.765.432/0001-10",
+  "razao_social": "Fornecedor ABC LTDA",
+  "nome_fantasia": "ABC Materiais",
+  "email": "contato@abc.com",
+  "telefone": "(11) 99999-9999",
+  "endereco": "Rua das Flores, 123 - São Paulo/SP"
+}
+
+### Buscar fornecedor por ID
+GET http://localhost:8000/api/v1/fornecedores/1/
+Authorization: Bearer {{access_token}}
+
+### Atualizar fornecedor
+PUT http://localhost:8000/api/v1/fornecedores/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "cnpj": "98.765.432/0001-10",
+  "razao_social": "Fornecedor ABC LTDA - Atualizado",
+  "nome_fantasia": "ABC Materiais",
+  "email": "novo@abc.com",
+  "telefone": "(11) 88888-8888",
+  "endereco": "Rua Nova, 456 - São Paulo/SP",
+  "ativo": true
+}
+
+### Deletar fornecedor
+DELETE http://localhost:8000/api/v1/fornecedores/1/
+Authorization: Bearer {{access_token}}
