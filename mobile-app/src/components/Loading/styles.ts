@@ -1,15 +1,16 @@
 import { StyleSheet } from 'react-native';
+import { theme } from '../../utils/theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: theme.spacing.md,
   },
   text: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
+    marginTop: theme.spacing.sm,
+    fontSize: theme.fonts.sizes.medium,
+    color: theme.colors.textSecondary,
   },
 });

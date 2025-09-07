@@ -1,22 +1,23 @@
 import { StyleSheet } from 'react-native';
+import { theme } from '../../utils/theme';
 
 export const styles = StyleSheet.create({
   container: {
-    marginBottom: 15,
+    marginBottom: theme.spacing.md,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    fontSize: 16,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.small,
+    fontSize: theme.fonts.sizes.medium,
   },
   inputError: {
-    borderColor: 'red',
+    borderColor: theme.colors.error,
   },
   errorText: {
-    color: 'red',
-    fontSize: 12,
-    marginTop: 5,
+    color: theme.colors.error,
+    fontSize: theme.fonts.sizes.small,
+    marginTop: theme.spacing.xs,
   },
 });

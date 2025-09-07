@@ -1,19 +1,21 @@
 import { StyleSheet } from 'react-native';
+import { theme } from '../../utils/theme';
 
 export const styles = StyleSheet.create({
   item: {
-    padding: 15,
+    padding: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
+    borderBottomColor: theme.colors.borderLight,
+    backgroundColor: theme.colors.background,
   },
   title: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: theme.fonts.sizes.medium,
+    fontWeight: theme.fonts.weights.bold,
+    color: theme.colors.text,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
+    fontSize: theme.fonts.sizes.small,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
   },
 });

@@ -1,21 +1,23 @@
 import { StyleSheet } from 'react-native';
+import { theme } from '../../../utils/theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: theme.fonts.sizes.xlarge,
+    fontWeight: theme.fonts.weights.bold,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: theme.spacing.lg,
+    color: theme.colors.text,
   },
   error: {
-    color: 'red',
+    color: theme.colors.error,
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: theme.spacing.sm,
   },
 });

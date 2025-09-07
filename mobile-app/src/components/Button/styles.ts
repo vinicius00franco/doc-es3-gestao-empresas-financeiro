@@ -1,34 +1,35 @@
 import { StyleSheet } from 'react-native';
+import { theme } from '../../utils/theme';
 
 export const styles = StyleSheet.create({
   primaryButton: {
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: theme.colors.primary,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.medium,
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: theme.spacing.sm,
   },
   secondaryButton: {
-    backgroundColor: '#28a745',
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: theme.colors.secondary,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.medium,
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: theme.spacing.sm,
   },
   primaryText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: theme.colors.background,
+    fontSize: theme.fonts.sizes.medium,
+    fontWeight: theme.fonts.weights.bold,
   },
   secondaryText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: theme.colors.background,
+    fontSize: theme.fonts.sizes.medium,
+    fontWeight: theme.fonts.weights.bold,
   },
   disabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: theme.colors.border,
   },
   disabledText: {
-    color: '#999',
+    color: theme.colors.textSecondary,
   },
 });
