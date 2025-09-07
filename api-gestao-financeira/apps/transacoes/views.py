@@ -2,6 +2,7 @@ from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
+from core.mixins import TenantViewMixin
 from .models import Transacao, Categoria, Fornecedor
 from .serializers import (
     TransacaoSerializer, 
@@ -10,9 +11,8 @@ from .serializers import (
 )
 
 
-class TransacaoListCreateView(generics.ListCreateAPIView):
+class TransacaoListCreateView(TenantViewMixin, generics.ListCreateAPIView):
     serializer_class = TransacaoSerializer
-    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['tipo_transacao', 'status', 'categoria', 'data_transacao']
     search_fields = ['descricao', 'observacoes', 'numero_documento']
@@ -20,15 +20,11 @@ class TransacaoListCreateView(generics.ListCreateAPIView):
     ordering = ['-data_transacao']
 
     def get_queryset(self):
-        user = self.request.user
-        empresa_padrao = user.empresas.filter(empresa_padrao=True).first()
-        
-        if not empresa_padrao:
+        queryset = super().get_queryset()
+        if not queryset.exists():
             return Transacao.objects.none()
         
-        queryset = Transacao.objects.filter(empresa=empresa_padrao).select_related(
-            'categoria', 'fornecedor'
-        )
+        queryset = queryset.select_related('categoria', 'fornecedor')
         
         # Filtros customizados
         data_inicio = self.request.query_params.get('data_inicio')
@@ -42,34 +38,20 @@ class TransacaoListCreateView(generics.ListCreateAPIView):
         return queryset
 
 
-class TransacaoDetailView(generics.RetrieveUpdateDestroyAPIView):
+class TransacaoDetailView(TenantViewMixin, generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TransacaoSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        empresa_padrao = user.empresas.filter(empresa_padrao=True).first()
-        
-        if not empresa_padrao:
-            return Transacao.objects.none()
-        
-        return Transacao.objects.filter(empresa=empresa_padrao)
+        return super().get_queryset()
 
 
-class CategoriaListCreateView(generics.ListCreateAPIView):
+class CategoriaListCreateView(TenantViewMixin, generics.ListCreateAPIView):
     serializer_class = CategoriaSerializer
-    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['nome', 'descricao']
 
     def get_queryset(self):
-        user = self.request.user
-        empresa_padrao = user.empresas.filter(empresa_padrao=True).first()
-        
-        if not empresa_padrao:
-            return Categoria.objects.none()
-        
-        queryset = Categoria.objects.filter(empresa=empresa_padrao, ativa=True)
+        queryset = super().get_queryset().filter(ativa=True)
         
         # Filtro por tipo de transação
         tipo = self.request.query_params.get('tipo_transacao')
@@ -79,45 +61,24 @@ class CategoriaListCreateView(generics.ListCreateAPIView):
         return queryset
 
 
-class CategoriaDetailView(generics.RetrieveUpdateDestroyAPIView):
+class CategoriaDetailView(TenantViewMixin, generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategoriaSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        empresa_padrao = user.empresas.filter(empresa_padrao=True).first()
-        
-        if not empresa_padrao:
-            return Categoria.objects.none()
-        
-        return Categoria.objects.filter(empresa=empresa_padrao)
+        return super().get_queryset()
 
 
-class FornecedorListCreateView(generics.ListCreateAPIView):
+class FornecedorListCreateView(TenantViewMixin, generics.ListCreateAPIView):
     serializer_class = FornecedorSerializer
-    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
     search_fields = ['razao_social', 'nome_fantasia', 'cnpj']
 
     def get_queryset(self):
-        user = self.request.user
-        empresa_padrao = user.empresas.filter(empresa_padrao=True).first()
-        
-        if not empresa_padrao:
-            return Fornecedor.objects.none()
-        
-        return Fornecedor.objects.filter(empresa=empresa_padrao, ativo=True)
+        return super().get_queryset().filter(ativo=True)
 
 
-class FornecedorDetailView(generics.RetrieveUpdateDestroyAPIView):
+class FornecedorDetailView(TenantViewMixin, generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FornecedorSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        empresa_padrao = user.empresas.filter(empresa_padrao=True).first()
-        
-        if not empresa_padrao:
-            return Fornecedor.objects.none()
-        
-        return Fornecedor.objects.filter(empresa=empresa_padrao)
+        return super().get_queryset()

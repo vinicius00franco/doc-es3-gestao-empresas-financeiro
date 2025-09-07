@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from core.jwt_utils import CustomRefreshToken
 from .models import Usuario
 from .serializers import (
     UsuarioRegistroSerializer, 
@@ -39,7 +40,10 @@ def login(request):
     serializer = UsuarioLoginSerializer(data=request.data)
     if serializer.is_valid():
         usuario = serializer.validated_data['usuario']
-        refresh = RefreshToken.for_user(usuario)
+        empresa = serializer.validated_data['empresa']
+        application_id = serializer.validated_data['application_id']
+        
+        refresh = CustomRefreshToken.for_user_with_tenant(usuario, application_id)
         
         return Response({
             'access_token': str(refresh.access_token),
@@ -48,7 +52,8 @@ def login(request):
                 'id': usuario.id,
                 'nome': usuario.nome,
                 'email': usuario.email
-            }
+            },
+            'application_id': application_id
         })
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

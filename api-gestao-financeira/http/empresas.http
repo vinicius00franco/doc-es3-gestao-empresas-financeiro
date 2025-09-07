@@ -1,10 +1,12 @@
 ### Listar empresas
 GET http://localhost:8000/api/v1/empresas/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Criar empresa
 POST http://localhost:8000/api/v1/empresas/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -18,10 +20,12 @@ Content-Type: application/json
 ### Buscar empresa por ID
 GET http://localhost:8000/api/v1/empresas/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Atualizar empresa
 PUT http://localhost:8000/api/v1/empresas/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -35,6 +39,7 @@ Content-Type: application/json
 ### Atualizar parcialmente empresa
 PATCH http://localhost:8000/api/v1/empresas/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -44,3 +49,4 @@ Content-Type: application/json
 ### Deletar empresa
 DELETE http://localhost:8000/api/v1/empresas/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}

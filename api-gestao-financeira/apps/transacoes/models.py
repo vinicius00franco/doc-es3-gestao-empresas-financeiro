@@ -1,9 +1,10 @@
 from django.db import models
 from django.conf import settings
 from apps.empresas.models import Empresa
+from core.tenant import TenantMixin
 
 
-class Categoria(models.Model):
+class Categoria(TenantMixin):
     TIPO_TRANSACAO_CHOICES = [
         ('entrada', 'Entrada'),
         ('saida', 'Saída'),
@@ -23,14 +24,18 @@ class Categoria(models.Model):
         db_table = 'categorias'
         verbose_name = 'Categoria'
         verbose_name_plural = 'Categorias'
-        unique_together = ['empresa', 'nome']
+        unique_together = ['tenant_id', 'empresa', 'nome']
         ordering = ['tipo_transacao', 'nome']
+        indexes = [
+            models.Index(fields=['tenant_id', 'empresa']),
+            models.Index(fields=['tenant_id', 'tipo_transacao']),
+        ]
 
     def __str__(self):
         return f"{self.nome} ({self.get_tipo_transacao_display()})"
 
 
-class Fornecedor(models.Model):
+class Fornecedor(TenantMixin):
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='fornecedores')
     cnpj = models.CharField(max_length=18)
     razao_social = models.CharField(max_length=255)
@@ -47,14 +52,18 @@ class Fornecedor(models.Model):
         db_table = 'fornecedores'
         verbose_name = 'Fornecedor'
         verbose_name_plural = 'Fornecedores'
-        unique_together = ['empresa', 'cnpj']
+        unique_together = ['tenant_id', 'empresa', 'cnpj']
         ordering = ['razao_social']
+        indexes = [
+            models.Index(fields=['tenant_id', 'empresa']),
+            models.Index(fields=['tenant_id', 'ativo']),
+        ]
 
     def __str__(self):
         return self.razao_social
 
 
-class Transacao(models.Model):
+class Transacao(TenantMixin):
     TIPO_TRANSACAO_CHOICES = [
         ('entrada', 'Entrada'),
         ('saida', 'Saída'),
@@ -95,6 +104,12 @@ class Transacao(models.Model):
         verbose_name = 'Transação'
         verbose_name_plural = 'Transações'
         ordering = ['-data_transacao', '-criado_em']
+        indexes = [
+            models.Index(fields=['tenant_id', 'empresa']),
+            models.Index(fields=['tenant_id', 'data_transacao']),
+            models.Index(fields=['tenant_id', 'status']),
+            models.Index(fields=['tenant_id', 'tipo_transacao']),
+        ]
 
     def __str__(self):
         return f"{self.descricao} - R$ {self.valor}"

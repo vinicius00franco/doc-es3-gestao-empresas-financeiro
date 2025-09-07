@@ -1,9 +1,10 @@
 from django.contrib import admin
+from core.admin import TenantAdminMixin
 from .models import Transacao, Categoria, Fornecedor
 
 
 @admin.register(Transacao)
-class TransacaoAdmin(admin.ModelAdmin):
+class TransacaoAdmin(TenantAdminMixin, admin.ModelAdmin):
     list_display = ['descricao', 'valor', 'tipo_transacao', 'data_transacao', 'empresa', 'status']
     list_filter = ['tipo_transacao', 'status', 'data_transacao', 'empresa']
     search_fields = ['descricao', 'observacoes', 'numero_documento']
@@ -12,7 +13,7 @@ class TransacaoAdmin(admin.ModelAdmin):
 
 
 @admin.register(Categoria)
-class CategoriaAdmin(admin.ModelAdmin):
+class CategoriaAdmin(TenantAdminMixin, admin.ModelAdmin):
     list_display = ['nome', 'tipo_transacao', 'empresa', 'ativa', 'categoria_padrao']
     list_filter = ['tipo_transacao', 'ativa', 'categoria_padrao', 'empresa']
     search_fields = ['nome', 'descricao']
@@ -20,7 +21,7 @@ class CategoriaAdmin(admin.ModelAdmin):
 
 
 @admin.register(Fornecedor)
-class FornecedorAdmin(admin.ModelAdmin):
+class FornecedorAdmin(TenantAdminMixin, admin.ModelAdmin):
     list_display = ['razao_social', 'cnpj', 'empresa', 'criado_automaticamente', 'ativo']
     list_filter = ['criado_automaticamente', 'ativo', 'empresa']
     search_fields = ['razao_social', 'nome_fantasia', 'cnpj']

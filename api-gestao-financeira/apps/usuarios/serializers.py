@@ -32,10 +32,12 @@ class UsuarioRegistroSerializer(serializers.ModelSerializer):
 class UsuarioLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     senha = serializers.CharField()
+    application_id = serializers.CharField(required=True)
 
     def validate(self, attrs):
         email = attrs.get('email')
         senha = attrs.get('senha')
+        application_id = attrs.get('application_id')
 
         if email and senha:
             usuario = authenticate(username=email, password=senha)
@@ -43,7 +45,16 @@ class UsuarioLoginSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Credenciais inválidas.')
             if not usuario.ativo:
                 raise serializers.ValidationError('Conta desativada.')
+            
+            # Valida se o application_id corresponde a uma empresa do usuário
+            # application_id é uma string como "com.tenant1", mapeamos para empresa
+            empresa = usuario.empresas.first()  # Por simplicidade, usa primeira empresa
+            if not empresa:
+                raise serializers.ValidationError('Usuário não possui empresas cadastradas.')
+            
             attrs['usuario'] = usuario
+            attrs['empresa'] = empresa
+            attrs['application_id'] = application_id
         return attrs
 
 

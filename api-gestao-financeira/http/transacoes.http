@@ -1,14 +1,17 @@
 ### Listar transações
 GET http://localhost:8000/api/v1/transacoes/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Listar transações com filtros
 GET http://localhost:8000/api/v1/transacoes/?tipo_transacao=entrada&data_inicio=2025-01-01&data_fim=2025-01-31
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Criar transação de entrada
 POST http://localhost:8000/api/v1/transacoes/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -24,6 +27,7 @@ Content-Type: application/json
 ### Criar transação de saída
 POST http://localhost:8000/api/v1/transacoes/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -40,10 +44,12 @@ Content-Type: application/json
 ### Buscar transação por ID
 GET http://localhost:8000/api/v1/transacoes/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Atualizar transação
 PUT http://localhost:8000/api/v1/transacoes/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -59,3 +65,4 @@ Content-Type: application/json
 ### Deletar transação
 DELETE http://localhost:8000/api/v1/transacoes/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}

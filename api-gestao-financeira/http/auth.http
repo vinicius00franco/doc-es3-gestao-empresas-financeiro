@@ -15,7 +15,8 @@ Content-Type: application/json
 
 {
   "email": "joao@exemplo.com",
-  "password": "senha123456"
+  "senha": "senha123456",
+  "application_id": "com.tenant1"
 }
 
 ### Refresh Token
@@ -29,10 +30,12 @@ Content-Type: application/json
 ### Perfil do usuário
 GET http://localhost:8000/api/v1/users/profile/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Atualizar perfil
 PUT http://localhost:8000/api/v1/users/profile/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -43,10 +46,12 @@ Content-Type: application/json
 ### Configurações do usuário
 GET http://localhost:8000/api/v1/users/configuracao/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Atualizar configurações
 PUT http://localhost:8000/api/v1/users/configuracao/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {

@@ -1,14 +1,17 @@
 ### Listar categorias
 GET http://localhost:8000/api/v1/categorias/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Listar categorias por tipo
 GET http://localhost:8000/api/v1/categorias/?tipo_transacao=entrada
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Criar categoria de entrada
 POST http://localhost:8000/api/v1/categorias/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -23,6 +26,7 @@ Content-Type: application/json
 ### Criar categoria de saída
 POST http://localhost:8000/api/v1/categorias/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -36,10 +40,12 @@ Content-Type: application/json
 ### Buscar categoria por ID
 GET http://localhost:8000/api/v1/categorias/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 
 ### Atualizar categoria
 PUT http://localhost:8000/api/v1/categorias/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
 Content-Type: application/json
 
 {
@@ -54,3 +60,4 @@ Content-Type: application/json
 ### Deletar categoria
 DELETE http://localhost:8000/api/v1/categorias/1/
 Authorization: Bearer {{access_token}}
+X-Application-ID: {{application_id}}
