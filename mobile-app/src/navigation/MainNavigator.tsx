@@ -1,21 +1,21 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import DashboardScreen from '../screens/main/DashboardScreen';
-import EmpresaScreen from '../screens/main/EmpresaScreen';
-import TransacaoScreen from '../screens/main/TransacaoScreen';
-import AssinaturaScreen from '../screens/main/AssinaturaScreen';
-import NotaFiscalScreen from '../screens/main/NotaFiscalScreen';
+import Dashboard from '../screens/main/Dashboard';
+import Empresa from '../screens/main/Empresa';
+import Transacao from '../screens/main/Transacao';
+import Assinatura from '../screens/main/Assinatura';
+import NotaFiscal from '../screens/main/NotaFiscal';
 
 const Tab = createBottomTabNavigator();
 
 const MainNavigator = () => {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Empresas" component={EmpresaScreen} />
-      <Tab.Screen name="Transações" component={TransacaoScreen} />
-      <Tab.Screen name="Assinaturas" component={AssinaturaScreen} />
-      <Tab.Screen name="Notas Fiscais" component={NotaFiscalScreen} />
+      <Tab.Screen name="Dashboard" component={Dashboard} />
+      <Tab.Screen name="Empresas" component={Empresa} />
+      <Tab.Screen name="Transações" component={Transacao} />
+      <Tab.Screen name="Assinaturas" component={Assinatura} />
+      <Tab.Screen name="Notas Fiscais" component={NotaFiscal} />
     </Tab.Navigator>
   );
 };
