@@ -1,1 +1,3 @@
 venv/
+api-gestao-financeira/core/__pycache__/
+api-gestao-financeira/**/__pycache__/

@@ -61,25 +61,109 @@ apps/
 ### 1. Clonar e Configurar
 ```bash
 # Copiar variáveis de ambiente
-cp .env.example .env
+cp .env.example .env.local
 
-# Editar .env com suas configurações
+# Editar .env.local com suas configurações
 ```
 
-### 2. Docker (Recomendado)
+### 2. Desenvolvimento com Load Balancer
 ```bash
-# Iniciar todos os serviços
+# Iniciar ambiente completo (Nginx + 2 Django + Celery)
 docker-compose up --build
 
 # Aplicar migrações
-docker-compose exec web python manage.py migrate
+docker-compose exec web1 python manage.py migrate
 
 # Criar superusuário
-docker-compose exec web python manage.py createsuperuser
+docker-compose exec web1 python manage.py createsuperuser
 
 # Criar dados iniciais
-docker-compose exec web python manage.py shell
+docker-compose exec web1 python manage.py shell < setup.py
 ```
+
+## 🔧 Como Funciona para o Desenvolvedor
+
+### **Fluxo de Requisições**
+```
+Desenvolvedor → http://localhost (Nginx) → web1 ou web2 (Django) → Resposta
+```
+
+### **⚠️ Cuidados com Load Balancer**
+
+#### **1. Sessões e Estado**
+```python
+# ❌ PROBLEMA: Dados em memória local
+user_cache = {}  # Perdido se requisição vai para outra instância
+
+# ✅ SOLUÇÃO: Use Redis ou banco
+from django.core.cache import cache
+cache.set('user_data', data, 300)
+```
+
+#### **2. Arquivos Temporários**
+```python
+# ❌ PROBLEMA: Arquivo salvo apenas em uma instância
+with open('/tmp/temp_file.txt', 'w') as f:
+    f.write(data)
+
+# ✅ SOLUÇÃO: Use volume compartilhado ou Redis
+import tempfile
+with tempfile.NamedTemporaryFile(dir='/app/media/temp') as f:
+    f.write(data)
+```
+
+#### **3. Variáveis Globais**
+```python
+# ❌ PROBLEMA: Contador local por instância
+request_count = 0
+
+# ✅ SOLUÇÃO: Use Redis para dados compartilhados
+from django.core.cache import cache
+cache.set('request_count', cache.get('request_count', 0) + 1)
+```
+
+### **🛠️ Comandos de Desenvolvimento**
+
+```bash
+# Iniciar ambiente completo
+docker-compose up --build
+
+# Acessar apenas uma instância (bypass load balancer)
+curl http://localhost:8000/api/v1/auth/login/  # web1 direto
+
+# Acessar via load balancer
+curl http://localhost/api/v1/auth/login/  # Nginx distribui
+
+# Escalar instâncias
+docker-compose up --scale web1=1 --scale web2=3
+
+# Parar uma instância para teste
+docker-compose stop web2
+```
+
+### **📊 Monitoramento**
+
+```bash
+# Health checks
+curl http://localhost/health/  # Via Nginx
+curl http://localhost:8000/health/  # web1 direto
+
+# Status dos containers
+docker-compose ps
+
+# Logs em tempo real
+docker-compose logs -f nginx web1 web2 celery
+
+# Debug específico
+docker-compose logs -f web1  # Só uma instância
+```
+
+### **🔄 Hot Reload**
+
+- **Mudanças no código** → Refletidas instantaneamente
+- **Novas dependências** → Precisa rebuild: `docker-compose up --build`
+- **Mudanças no settings** → Restart automático do Django
+- **Arquivos estáticos** → Servidos pelo Nginx via volume
 
 ### 3. Instalação Local
 ```bash

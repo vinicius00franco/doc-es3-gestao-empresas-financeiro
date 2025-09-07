@@ -1,0 +1,19 @@
+
+
+services:
+  web1:
+    command: uvicorn core.asgi:application --host 0.0.0.0 --port 8000 --reload
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      USE_FILE_LOGGING: "True"
+    volumes:
+      - ./logs:/app/logs
+  web2:
+    command: uvicorn core.asgi:application --host 0.0.0.0 --port 8000 --reload
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      USE_FILE_LOGGING: "True"
+    volumes:
+      - ./logs:/app/logs
+  celery:
+    command: celery -A core worker -l info --concurrency=2

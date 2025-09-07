@@ -46,6 +46,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.CorrelationIdMiddleware',
+    'core.logging.RequestLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -112,6 +114,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Garante diretório de logs (não falha se já existir)
+LOG_DIR = BASE_DIR / 'logs'
+LOG_DIR.mkdir(exist_ok=True)
+
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -162,6 +168,84 @@ CACHES = {
     }
 }
 
+# Session Configuration for Load Balancing
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+
+# Logging Configuration (dinâmico para evitar erros de permissão em dev)
+USE_FILE_LOGGING = config('USE_FILE_LOGGING', default=not DEBUG, cast=bool)
+
+BASE_FORMATTER = {
+    '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+    # Usar "fmt" (parametro aceito pelo JsonFormatter) para garantir saída JSON pura.
+    # Mantemos campos relevantes; Filebeat fará json.keys_under_root=true.
+    'fmt': '%(asctime)s %(levelname)s %(name)s %(message)s %(correlation_id)s %(path)s %(method)s %(status_code)s %(user_id)s %(response_time)s %(client_ip)s'
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'json': BASE_FORMATTER,
+    },
+    'filters': {
+        'request_filter': {
+            '()': 'core.logging.RequestFilter',
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'json',
+            'filters': ['request_filter'],
+        }
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO'
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    }
+}
+
+if USE_FILE_LOGGING:
+    LOG_FILE = str(LOG_DIR / 'django.log')
+    LOGGING['handlers']['file'] = {
+        'class': 'logging.handlers.WatchedFileHandler',
+        'filename': LOG_FILE,
+        'formatter': 'json',
+        'filters': ['request_filter'],
+        'delay': True,
+    }
+    LOGGING['root']['handlers'].append('file')
+    LOGGING['loggers']['django']['handlers'].append('file')
+    LOGGING['loggers']['django.request']['handlers'].append('file')
+
+    # Handler dedicado para requests em arquivo NDJSON limpo
+    REQUEST_LOG_FILE = str(LOG_DIR / 'requests.jsonl')
+    LOGGING['handlers']['requests_file'] = {
+        'class': 'logging.handlers.WatchedFileHandler',
+        'filename': REQUEST_LOG_FILE,
+        'formatter': 'json',
+        'filters': ['request_filter'],
+        'delay': True,
+    }
+    LOGGING['loggers']['requests'] = {
+        'handlers': ['requests_file'],
+        'level': 'INFO',
+        'propagate': False,
+    }
+
 # Security Settings for Production
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
@@ -170,3 +254,6 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    # Proxy Headers for Load Balancer
+    USE_X_FORWARDED_HOST = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
