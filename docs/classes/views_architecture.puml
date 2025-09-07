@@ -1,5 +1,10 @@
 @startuml views_architecture
 !define DIRECTION left to right direction
+title Views - Arquitetura
+
+skinparam linetype ortho
+skinparam nodesep 10
+skinparam ranksep 20
 
 class TenantViewMixin {
   +get_queryset(): QuerySet

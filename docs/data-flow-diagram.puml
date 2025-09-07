@@ -61,15 +61,17 @@ circle "6.0\nGerar\nDashboard" as P6
 ' =====================
 ' Depósitos de Dados
 ' =====================
-rectangle "D1 | Usuários" as D1 <<datastore>>
-rectangle "D2 | Empresas" as D2 <<datastore>>
-rectangle "D3 | Transações" as D3 <<datastore>>
-rectangle "D4 | Categorias" as D4 <<datastore>>
-rectangle "D5 | Fornecedores" as D5 <<datastore>>
-rectangle "D6 | Notas Fiscais" as D6 <<datastore>>
-rectangle "D7 | Assinaturas" as D7 <<datastore>>
-rectangle "D8 | Planos" as D8 <<datastore>>
-rectangle "D9 | Logs" as D9 <<datastore>>
+rectangle "D1 | Usuario (usua_id)" as D1 <<datastore>>
+rectangle "D2 | Empresa (empr_id)" as D2 <<datastore>>
+rectangle "D3 | Transacao (tran_id)" as D3 <<datastore>>
+rectangle "D4 | Categoria (cate_id)" as D4 <<datastore>>
+rectangle "D5 | Fornecedor (forn_id)" as D5 <<datastore>>
+rectangle "D6 | NotaFiscal (notf_id)" as D6 <<datastore>>
+rectangle "D7 | Assinatura (assi_id)" as D7 <<datastore>>
+rectangle "D8 | Plano (plan_id)" as D8 <<datastore>>
+rectangle "D9 | LogAtividade (loga_id)" as D9 <<datastore>>
+rectangle "D10 | ConfiguracaoUsuario (conf_id)" as D10 <<datastore>>
+rectangle "D11 | TokenRecuperacao (tokn_id)" as D11 <<datastore>>
 
 ' =====================
 ' Fluxos do Usuário
@@ -97,21 +99,23 @@ ReceitaFederal -[#7A4B87]-> P4 : validação NF-e
 ' =====================
 ' Processo <-> Dados
 ' =====================
-P1 <-> D1 : R/W usuários
+P1 <-> D1 : R/W usuarios (usua_id)
+P1 <-> D10 : R/W configuracoes
+P1 <-> D11 : R/W tokens
 P1 -[#grey,dashed]-> D9 : log acesso
-P2 <-> D2 : R/W empresas
+P2 <-> D2 : R/W empresas (empr_app_id)
 P2 -[#grey,dashed]-> D9 : log empresa
-P3 <-> D3 : R/W transações
-P3 <-> D4 : R/W categorias
-P3 <-> D5 : R/W fornecedores
-P3 -[#grey,dashed]-> D9 : log transação
-P4 <-> D6 : R/W notas fiscais
-P4 -[#2F4858]-> D3 : transação NF-e
+P3 <-> D3 : R/W transacoes (tran_app_id)
+P3 <-> D4 : R/W categorias (cate_app_id)
+P3 <-> D5 : R/W fornecedores (forn_app_id)
+P3 -[#grey,dashed]-> D9 : log transacao
+P4 <-> D6 : R/W notas fiscais (notf_app_id)
+P4 -[#2F4858]-> D3 : transacao NF-e
 P4 -[#2F4858]-> D5 : fornecedor NF-e
 P5 <-> D7 : R/W assinaturas
 P5 <-> D8 : R/W planos
 P5 -[#grey,dashed]-> D9 : log assinatura
-D3 -[#0B6E4F]-> P6 : consultar transações
+D3 -[#0B6E4F]-> P6 : consultar transacoes
 D6 -[#0B6E4F]-> P6 : consultar NF-e
 D2 -[#0B6E4F]-> P6 : consultar empresas
 

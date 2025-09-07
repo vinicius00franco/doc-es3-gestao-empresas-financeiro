@@ -32,10 +32,10 @@ rectangle "RELATÓRIOS /\nDASHBOARD\nA6" as A6
 ' =====================
 ' INPUTS
 ' =====================
-rectangle "Credenciais\nUsuário" as IN_A1
-rectangle "Dados Empresa\nCNPJ" as IN_A2
-rectangle "Dados Transação\nValores" as IN_A3
-rectangle "Arquivos NF-e\nXML/PDF" as IN_A4
+rectangle "Credenciais\nUsuario (usua_email)" as IN_A1
+rectangle "Dados Empresa\n(empr_cnpj, empr_app_id)" as IN_A2
+rectangle "Dados Transacao\n(tran_valor, tran_app_id)" as IN_A3
+rectangle "Arquivos NF-e\n(notf_arquivo, notf_app_id)" as IN_A4
 IN_A1 -right-> A1
 IN_A2 -right-> A2
 IN_A3 -right-> A3
@@ -44,12 +44,12 @@ IN_A4 -right-> A4
 ' =====================
 ' CONTROLS
 ' =====================
-rectangle "Segurança\nAutenticação" as CT_A1
-rectangle "Validação CNPJ\nRegras Negócio" as CT_A2
-rectangle "Limites Plano\nRegras Categoria" as CT_A3
-rectangle "Padrões NF-e\nLegislação" as CT_A4
-rectangle "Políticas Cobrança\nRegras Planos" as CT_A5
-rectangle "Permissões\nRelatório" as CT_A6
+rectangle "Seguranca JWT\nTenant Validation" as CT_A1
+rectangle "Validacao CNPJ\nRegras Negocio" as CT_A2
+rectangle "Limites Plano (plan_*)\nRegras Categoria" as CT_A3
+rectangle "Padroes NF-e\nLegislacao" as CT_A4
+rectangle "Politicas Cobranca\nRegras Planos" as CT_A5
+rectangle "Permissoes\nMulti-tenant" as CT_A6
 CT_A1 -down-> A1
 CT_A2 -down-> A2
 CT_A3 -down-> A3
@@ -60,12 +60,12 @@ CT_A6 -down-> A6
 ' =====================
 ' OUTPUTS
 ' =====================
-rectangle "Token JWT\nUsuário Autenticado" as OUT_A1
-rectangle "Empresa Cadastrada\nValidação" as OUT_A2
-rectangle "Transação Processada\nCategoria" as OUT_A3
-rectangle "Dados NF-e\nTransação" as OUT_A4
-rectangle "Status Assinatura\nLimites" as OUT_A5
-rectangle "Dashboard\nRelatórios" as OUT_A6
+rectangle "Token JWT\nUsuario Autenticado" as OUT_A1
+rectangle "Empresa Cadastrada\n(empr_id, empr_app_id)" as OUT_A2
+rectangle "Transacao Processada\n(tran_id, cate_id)" as OUT_A3
+rectangle "Dados NF-e\n(notf_dados_extraidos)" as OUT_A4
+rectangle "Status Assinatura\n(assi_status)" as OUT_A5
+rectangle "Dashboard\nRelatorios" as OUT_A6
 A1 -right-> OUT_A1
 A2 -right-> OUT_A2
 A3 -right-> OUT_A3
@@ -76,12 +76,12 @@ A6 -right-> OUT_A6
 ' =====================
 ' MECHANISMS
 ' =====================
-rectangle "JWT Auth\nBanco Usuários" as M_A1
-rectangle "Validador CNPJ\nBanco Empresas" as M_A2
-rectangle "Motor Categoria\nBanco Transações" as M_A3
-rectangle "Parser XML/PDF\nIA Extração" as M_A4
-rectangle "Gateway Pagamento\nBanco Assinaturas" as M_A5
-rectangle "Motor Relatórios\nCache Redis" as M_A6
+rectangle "JWT Auth\nTabela Usuario" as M_A1
+rectangle "Validador CNPJ\nTabela Empresa (Particionada)" as M_A2
+rectangle "Motor Categoria\nTabela Transacao (Particionada)" as M_A3
+rectangle "Parser XML/PDF\nTabela NotaFiscal (Particionada)" as M_A4
+rectangle "Gateway Pagamento\nTabela Assinatura" as M_A5
+rectangle "Motor Relatorios\nCache Redis + Tenant Filter" as M_A6
 M_A1 -up-> A1
 M_A2 -up-> A2
 M_A3 -up-> A3
@@ -90,12 +90,12 @@ M_A5 -up-> A5
 M_A6 -up-> A6
 
 ' Fluxos internos entre funções
-A1 -[bold]-> A2 : Usuário
-A2 -[bold]-> A3 : Empresa
-A3 -[bold]-> A6 : Transações
-A4 -[bold]-> A3 : NF-e -> Transação
-A5 -[bold]-> A3 : Limites
-A5 -[bold]-> A6 : Permissões
+A1 -[bold]-> A2 : Usuario (usua_id)
+A2 -[bold]-> A3 : Empresa (empr_app_id)
+A3 -[bold]-> A6 : Transacoes (tran_app_id)
+A4 -[bold]-> A3 : NF-e -> Transacao
+A5 -[bold]-> A3 : Limites (plan_limite_*)
+A5 -[bold]-> A6 : Permissoes
 
 legend right
 <b>IDEF0 Nível 1</b>\nEsquerda: Inputs | Topo: Controls\nDireita: Outputs | Baixo: Mechanisms

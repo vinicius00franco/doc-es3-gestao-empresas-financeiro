@@ -1,0 +1,301 @@
+@startuml
+
+!theme plain
+
+title DER - Sistema de Gestão Financeira (Atualizado)
+
+' =====================
+' Estilo Global
+' =====================
+skinparam linetype ortho
+skinparam backgroundColor #F5F9FC
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam ArrowColor #2F4858
+skinparam ArrowThickness 1.2
+skinparam wrapWidth 180
+skinparam maxMessageSize 180
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4858
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4858
+  FontColor #0F2E3D
+}
+skinparam titleFontSize 20
+skinparam titleFontColor #1F4E79
+
+' Paleta por domínio via estereótipos
+skinparam entity<<auth>> BackgroundColor #E3F2FD
+skinparam entity<<auth>> BorderColor #1E88E5
+skinparam entity<<finance>> BackgroundColor #E8F5E9
+skinparam entity<<finance>> BorderColor #43A047
+skinparam entity<<fiscal>> BackgroundColor #FFF3E0
+skinparam entity<<fiscal>> BorderColor #FB8C00
+skinparam entity<<log>> BackgroundColor #F3E5F5
+skinparam entity<<log>> BorderColor #8E24AA
+
+hide empty members
+
+' =====================
+' Entidades Inalteradas (Mantidas como Original)
+' =====================
+entity "Usuario" <<auth>> {
+  * usua_id : INTEGER <<PK>>
+  --
+  * usua_nome : VARCHAR(255)
+  * usua_email : VARCHAR(255) <<UK>>
+  * usua_senha : VARCHAR(128)
+  * usua_ativo : BOOLEAN
+  * usua_dt_criacao : DATETIME
+  * usua_dt_atualizacao : DATETIME
+}
+
+entity "ConfiguracaoUsuario" <<auth>> {
+  * conf_id : INTEGER <<PK>>
+  * usua_id : INTEGER <<FK>>
+  --
+  * conf_tema : VARCHAR(10)
+  * conf_moeda : VARCHAR(3)
+  * conf_formato_data : VARCHAR(10)
+  * conf_fuso_horario : VARCHAR(50)
+  * conf_notif_email : BOOLEAN
+  * conf_notif_push : BOOLEAN
+  * conf_backup_auto : BOOLEAN
+  * conf_dt_criacao : DATETIME
+  * conf_dt_atualizacao : DATETIME
+}
+
+entity "TokenRecuperacao" <<auth>> {
+  * tokn_id : INTEGER <<PK>>
+  * usua_id : INTEGER <<FK>>
+  --
+  * tokn_hash : VARCHAR(255) <<UK>>
+  * tokn_usado : BOOLEAN
+  * tokn_dt_expiracao : DATETIME
+  * tokn_dt_criacao : DATETIME
+}
+
+entity "LogAtividade" <<log>> {
+  * loga_id : INTEGER <<PK>>
+  * usua_id : INTEGER <<FK>>
+  --
+  * loga_acao : VARCHAR(100)
+  * loga_ip : INET
+  * loga_user_agent : TEXT
+  * loga_dt_criacao : DATETIME
+  ' Removido: loga_detalhes : JSON (normalizado para DetalheLog)
+}
+
+entity "Plano" <<finance>> {
+  * plan_id : INTEGER <<PK>>
+  --
+  * plan_nome : VARCHAR(50) <<UK>>
+  * plan_descricao : TEXT
+  * plan_preco : DECIMAL(10,2)
+  * plan_limite_transacoes : INTEGER
+  * plan_limite_empresas : INTEGER
+  * plan_permite_relatorios : BOOLEAN
+  * plan_permite_exportacao : BOOLEAN
+  * plan_permite_nf : BOOLEAN
+  * plan_ativo : BOOLEAN
+  * plan_dt_criacao : DATETIME
+}
+
+entity "Assinatura" <<finance>> {
+  * assi_id : INTEGER <<PK>>
+  * usua_id : INTEGER <<FK>>
+  * plan_id : INTEGER <<FK>>
+  --
+  * assi_status : VARCHAR(15)
+  * assi_dt_inicio : DATE
+  * assi_dt_fim : DATE
+  * assi_valor_pago : DECIMAL(10,2)
+  * assi_gateway : VARCHAR(50)
+  * assi_transacao_gateway : VARCHAR(255)
+  * assi_dt_criacao : DATETIME
+  * assi_dt_atualizacao : DATETIME
+}
+
+entity "Empresa" <<finance>> {
+  * empr_id : INTEGER <<PK>>
+  * usua_id : INTEGER <<FK>>
+  --
+  * empr_app_id : VARCHAR(255) <<UK>>
+  * empr_cnpj : VARCHAR(18)
+  * empr_razao_social : VARCHAR(255)
+  * empr_nome_fantasia : VARCHAR(255)
+  * empr_tipo : VARCHAR(10)
+  * empr_ativa : BOOLEAN
+  * empr_padrao : BOOLEAN
+  * empr_dt_criacao : DATETIME
+  * empr_dt_atualizacao : DATETIME
+}
+
+entity "Categoria" <<finance>> {
+  * cate_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
+  --
+  * cate_app_id : VARCHAR(255) <<PARTITION>>
+  * cate_nome : VARCHAR(100)
+  * cate_descricao : TEXT
+  * cate_cor : VARCHAR(7)
+  * cate_tipo_transacao : VARCHAR(10)
+  * cate_ativa : BOOLEAN
+  * cate_padrao : BOOLEAN
+  * cate_dt_criacao : DATETIME
+  ' Removido: cate_icone (normalizado para 4NF em CategoriaIcone)
+}
+
+' =====================
+' Entidades Alteradas/Novas
+' =====================
+
+' Nova: Fornecedor Global (para evitar repetições)
+entity "FornecedorGlobal" <<finance>> {
+  * forn_id_global : INTEGER <<PK>>
+  --
+  * forn_cnpj : VARCHAR(18) <<UK>>
+  * forn_razao_social : VARCHAR(255)
+  * forn_nome_fantasia : VARCHAR(255)
+  * forn_email : VARCHAR(255)
+  * forn_telefone : VARCHAR(20)
+  * forn_criado_auto : BOOLEAN
+  * forn_ativo : BOOLEAN
+  * forn_dt_criacao : DATETIME
+  * forn_dt_atualizacao : DATETIME
+  ' Removido: campos locais como endereco (agora em junção)
+}
+
+' Nova: Tabela de Junção M:N para Fornecedor
+entity "EmpresaFornecedor" <<finance>> {
+  * emfo_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
+  * forn_id_global : INTEGER <<FK>>
+  --
+  * emfo_endereco : TEXT  ' Atributo local por empresa
+  * emfo_dt_criacao : DATETIME
+}
+
+' Transacao (inalterada, mas agora relaciona com EmpresaFornecedor? Não, mantém FK com FornecedorGlobal via junção lógica)
+entity "Transacao" <<finance>> {
+  * tran_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
+  * cate_id : INTEGER <<FK>>
+  * forn_id_global : INTEGER <<FK>>  ' Alterado: Agora referencia global
+  --
+  * tran_app_id : VARCHAR(255) <<PARTITION>>
+  * tran_descricao : VARCHAR(255)
+  * tran_valor : DECIMAL(12,2)
+  * tran_dt_transacao : DATE
+  * tran_tipo : VARCHAR(10)
+  * tran_status : VARCHAR(10)
+  * tran_observacoes : TEXT
+  * tran_num_documento : VARCHAR(100)
+  * tran_forma_pagamento : VARCHAR(20)
+  * tran_recorrente : BOOLEAN
+  * tran_dt_criacao : DATETIME
+  * tran_dt_atualizacao : DATETIME
+}
+
+' NotaFiscal (alterada: removidas redundâncias)
+entity "NotaFiscal" <<fiscal>> {
+  * notf_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
+  * forn_id_global : INTEGER <<FK>>  ' Alterado: Referencia global
+  * tran_id : INTEGER <<FK>>
+  --
+  * notf_app_id : VARCHAR(255) <<PARTITION>>
+  * notf_arquivo_original : VARCHAR(255)
+  * notf_caminho_arquivo : VARCHAR(255)
+  * notf_tipo_arquivo : VARCHAR(5)
+  * notf_status : VARCHAR(15)
+  * notf_chave_acesso : VARCHAR(44) <<UK>>
+  * notf_valor_total : DECIMAL(12,2)  ' Pode ser derivado de itens
+  * notf_dt_emissao : DATE
+  ' Removido: notf_dados_extraidos : JSON (normalizado para ItemNotaFiscal)
+  ' Removido: notf_cnpj_emissor, notf_razao_social_emissor (use JOIN com FornecedorGlobal)
+  * notf_erro_processamento : TEXT
+  * notf_dt_criacao : DATETIME
+  * notf_dt_processamento : DATETIME
+}
+
+' Nova: ItemNotaFiscal (normalização de multi-valores)
+entity "ItemNotaFiscal" <<fiscal>> {
+  * itnf_id : INTEGER <<PK>>
+  * notf_id : INTEGER <<FK>>
+  --
+  * itnf_descricao : VARCHAR(255)
+  * itnf_quantidade : DECIMAL(10,3)
+  * itnf_valor_unitario : DECIMAL(12,2)
+  * itnf_valor_total_item : DECIMAL(12,2)
+  * itnf_impostos : JSON  ' Opcional: Se impostos forem complexos, normalize mais
+  * itnf_dt_criacao : DATETIME
+}
+
+' Nova: DetalheLog (normalização de multi-valores)
+entity "DetalheLog" <<log>> {
+  * detl_id : INTEGER <<PK>>
+  * loga_id : INTEGER <<FK>>
+  --
+  * detl_chave : VARCHAR(100)
+  * detl_valor : TEXT
+  * detl_dt_criacao : DATETIME
+}
+
+' Nova para 4NF: Icone Global e Junção com Categoria (exemplo de evolução)
+entity "IconeGlobal" <<finance>> {
+  * icon_id : INTEGER <<PK>>
+  --
+  * icon_nome : VARCHAR(50) <<UK>>
+  * icon_caminho : VARCHAR(255)
+  * icon_dt_criacao : DATETIME
+}
+
+entity "CategoriaIcone" <<finance>> {
+  * cati_id : INTEGER <<PK>>
+  * cate_id : INTEGER <<FK>>
+  * icon_id : INTEGER <<FK>>
+  --
+  * cati_plataforma : VARCHAR(20)  ' ex.: 'desktop', 'mobile'
+  * cati_ativo : BOOLEAN
+  * cati_dt_criacao : DATETIME
+}
+
+' =====================
+' Relacionamentos Atualizados
+' =====================
+Usuario ||--|| ConfiguracaoUsuario : possui
+Usuario ||--o{ TokenRecuperacao : gera
+Usuario ||--o{ LogAtividade : registra
+Usuario ||--|| Assinatura : possui
+Usuario ||--o{ Empresa : gerencia
+
+Plano ||--o{ Assinatura : define
+
+Empresa ||--o{ Categoria : possui
+Empresa ||--o{ EmpresaFornecedor : associa  ' Novo: M:N com FornecedorGlobal
+FornecedorGlobal ||--o{ EmpresaFornecedor : mapeia  ' Novo
+Empresa ||--o{ Transacao : registra
+Empresa ||--o{ NotaFiscal : processa
+
+Categoria ||--o{ Transacao : categoriza
+Categoria ||--o{ CategoriaIcone : possui  ' Novo: M:N para 4NF
+IconeGlobal ||--o{ CategoriaIcone : define  ' Novo
+
+FornecedorGlobal ||--o{ Transacao : fornece  ' Alterado: Global
+FornecedorGlobal ||--o{ NotaFiscal : emite  ' Alterado: Global
+
+Transacao ||--o| NotaFiscal : origina
+NotaFiscal ||--o{ ItemNotaFiscal : contém  ' Novo: 1:N
+
+LogAtividade ||--o{ DetalheLog : detalha  ' Novo: 1:N
+
+legend right
+<b>Legenda</b>\n<<auth>> Autenticação / Usuários\n<<finance>> Domínio Financeiro\n<<fiscal>> Fiscal / NF-e\n<<log>> Monitoramento & Log\nPK = chave primária | FK = chave estrangeira | UK = único\nPARTITION = campo de particionamento por tenant\n*Novidades*: FornecedorGlobal, EmpresaFornecedor, ItemNotaFiscal, DetalheLog, IconeGlobal, CategoriaIcone
+endlegend
+
+@enduml

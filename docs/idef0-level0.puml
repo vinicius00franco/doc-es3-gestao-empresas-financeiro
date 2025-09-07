@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+title IDEF0 Nível 0 - Sistema de Gestão Financeira
+
+skinparam linetype ortho
+skinparam backgroundColor #F7FAFC
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam ArrowColor #2F4858
+skinparam ArrowThickness 1.2
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4858
+  RoundCorner 10
+}
+skinparam note {
+  BackgroundColor #E8F1FA
+  BorderColor #2F4858
+}
+skinparam titleFontSize 20
+skinparam titleFontColor #1F4E79
+
+rectangle "GERENCIAR FINANÇAS EMPRESARIAIS\nA0" as A0
+
+/' =============================
+  I N P U T S  (Left)
+  Nova nomenclatura: usua_* | empr_* | tran_*
+'/
+note left of A0
+  <b>INPUTS</b>\n  usua_credenciais\n  usua_dados_registro\n  empr_dados_empresa\n  empr_dados_fornecedor\n  tran_nf_xml_pdf\n  tran_dados_transacao_manual\n  tran_filtros_relatorio
+end note
+
+/' =============================
+  C O N T R O L S  (Top)
+  Inclui contexto multi-tenancy (app_id)
+'/
+note top of A0
+  <b>CONTROLS</b>\n  legislacao_fiscal\n  regras_negocio\n  seg_politicas (auth/JWT)\n  assinatura_limites_plano\n  categoria_padroes\n  validacao_cnpj_cpf\n  multi_tenancy_app_id\n  auditoria_logs\n  rate_limit_login
+end note
+
+/' =============================
+  O U T P U T S  (Right)
+  Mantém prefixos conforme origem
+'/
+note right of A0
+  <b>OUTPUTS</b>\n  tran_relatorios_financeiros\n  tran_dashboard_metricas\n  tran_transacoes_categorizadas\n  tran_nf_dados_extraidos\n  tran_alertas_limites\n  tran_exportacao_dados\n  usua_token_jwt
+end note
+
+/' =============================
+  M E C H A N I S M S  (Bottom)
+  Infra & Serviços executores
+'/
+note bottom of A0
+  <b>MECHANISMS</b>\n  Django REST Framework\n  PostgreSQL particionado (schemas/tenant_id)\n  Tenant Middleware\n  JWT Auth (SimpleJWT)\n  Parser NF-e (async)\n  Celery + Redis (fila)\n  Gateway Pagamento (mock)\n  Serviço Email\n  Monitoramento (Prometheus/Grafana)
+end note
+
+legend right
+<b>IDEF0</b>\nInput=Left | Control=Top | Output=Right | Mechanism=Bottom\n<b>Prefixos</b>\nusua_ = usuário | empr_ = empresa | tran_ = fluxo financeiro/NF/relatórios
+endlegend
+
+@enduml

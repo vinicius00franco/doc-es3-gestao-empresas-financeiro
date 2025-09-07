@@ -36,40 +36,40 @@ rectangle "Sistema de Gestão Financeira" {
     usecase "Gerenciar Configurações" as UC4
   }
   
-  package "Gestão de Empresas" {
-    usecase "Cadastrar Empresa" as UC5
-    usecase "Editar Empresa" as UC6
-    usecase "Definir Empresa Padrão" as UC7
-    usecase "Listar Empresas" as UC8
+  package "Gestao de Empresas (Multi-tenant)" {
+    usecase "Cadastrar Empresa\n(empr_app_id)" as UC5
+    usecase "Editar Empresa\n(empr_id)" as UC6
+    usecase "Definir Empresa Padrao\n(empr_padrao)" as UC7
+    usecase "Listar Empresas\n(por usua_id)" as UC8
   }
   
-  package "Gestão Financeira" {
-    usecase "Criar Transação" as UC9
-    usecase "Editar Transação" as UC10
-    usecase "Excluir Transação" as UC11
-    usecase "Listar Transações" as UC12
-    usecase "Gerenciar Categorias" as UC13
-    usecase "Gerenciar Fornecedores" as UC14
+  package "Gestao Financeira (Particionada)" {
+    usecase "Criar Transacao\n(tran_app_id)" as UC9
+    usecase "Editar Transacao\n(tran_id)" as UC10
+    usecase "Excluir Transacao\n(tran_id)" as UC11
+    usecase "Listar Transacoes\n(por tran_app_id)" as UC12
+    usecase "Gerenciar Categorias\n(cate_app_id)" as UC13
+    usecase "Gerenciar Fornecedores\n(forn_app_id)" as UC14
   }
   
-  package "Processamento Fiscal" {
-    usecase "Upload Nota Fiscal" as UC15
-    usecase "Processar XML/PDF" as UC16
-    usecase "Extrair Dados NF-e" as UC17
-    usecase "Criar Transação da NF" as UC18
+  package "Processamento Fiscal (Particionado)" {
+    usecase "Upload Nota Fiscal\n(notf_app_id)" as UC15
+    usecase "Processar XML/PDF\n(notf_arquivo)" as UC16
+    usecase "Extrair Dados NF-e\n(notf_dados_extraidos)" as UC17
+    usecase "Criar Transacao da NF\n(tran_app_id)" as UC18
   }
   
-  package "Assinaturas" {
-    usecase "Contratar Plano" as UC19
-    usecase "Alterar Plano" as UC20
-    usecase "Cancelar Assinatura" as UC21
-    usecase "Verificar Limites" as UC22
+  package "Assinaturas (Global)" {
+    usecase "Contratar Plano\n(plan_id)" as UC19
+    usecase "Alterar Plano\n(assi_id)" as UC20
+    usecase "Cancelar Assinatura\n(assi_status)" as UC21
+    usecase "Verificar Limites\n(plan_limite_*)" as UC22
   }
   
-  package "Dashboard e Relatórios" {
-    usecase "Visualizar Dashboard" as UC23
-    usecase "Gerar Relatórios" as UC24
-    usecase "Exportar Dados" as UC25
+  package "Dashboard e Relatorios (Tenant-Aware)" {
+    usecase "Visualizar Dashboard\n(filtrado por app_id)" as UC23
+    usecase "Gerar Relatorios\n(por tenant)" as UC24
+    usecase "Exportar Dados\n(isolado por tenant)" as UC25
   }
 }
 

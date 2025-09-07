@@ -2,6 +2,10 @@
 !define DIRECTION left to right direction
 title Notas Fiscais - Arquitetura Completa
 
+skinparam linetype ortho
+skinparam nodesep 10
+skinparam ranksep 20
+
 package "URLs" {
   class NotasFiscaisURLs {
     +path('invoices/upload/', upload_nota_fiscal)

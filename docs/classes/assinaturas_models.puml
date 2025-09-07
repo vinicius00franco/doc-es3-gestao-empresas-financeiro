@@ -2,6 +2,10 @@
 !define DIRECTION left to right direction
 title Assinaturas - Arquitetura Completa
 
+skinparam linetype ortho
+skinparam nodesep 10
+skinparam ranksep 20
+
 package "URLs" {
   class AssinaturasURLs {
     +path('planos/', PlanoListView)
