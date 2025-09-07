@@ -1,0 +1,104 @@
+@startuml
+!theme plain
+title IDEF0 Nível 1 - Decomposição do Sistema de Gestão Financeira
+
+skinparam linetype ortho
+skinparam backgroundColor #F7FAFC
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam ArrowColor #2F4858
+skinparam ArrowThickness 1.2
+skinparam rectangle {
+	BackgroundColor #FFFFFF
+	BorderColor #2F4858
+	RoundCorner 12
+}
+skinparam titleFontSize 20
+skinparam titleFontColor #1F4E79
+
+' (Estereótipos removidos para compatibilidade com versão antiga do PlantUML)
+
+' (Removidos links ocultos de layout para reduzir conflitos em versão antiga)
+
+' Funções (Activities)
+rectangle "AUTENTICAR /\nUSUÁRIOS\nA1" as A1
+rectangle "GERENCIAR\nEMPRESAS\nA2" as A2
+rectangle "PROCESSAR\nTRANSAÇÕES\nA3" as A3
+rectangle "PROCESSAR\nNF-e\nA4" as A4
+rectangle "CONTROLAR\nASSINATURAS\nA5" as A5
+rectangle "RELATÓRIOS /\nDASHBOARD\nA6" as A6
+
+' =====================
+' INPUTS
+' =====================
+rectangle "Credenciais\nUsuário" as IN_A1
+rectangle "Dados Empresa\nCNPJ" as IN_A2
+rectangle "Dados Transação\nValores" as IN_A3
+rectangle "Arquivos NF-e\nXML/PDF" as IN_A4
+IN_A1 -right-> A1
+IN_A2 -right-> A2
+IN_A3 -right-> A3
+IN_A4 -right-> A4
+
+' =====================
+' CONTROLS
+' =====================
+rectangle "Segurança\nAutenticação" as CT_A1
+rectangle "Validação CNPJ\nRegras Negócio" as CT_A2
+rectangle "Limites Plano\nRegras Categoria" as CT_A3
+rectangle "Padrões NF-e\nLegislação" as CT_A4
+rectangle "Políticas Cobrança\nRegras Planos" as CT_A5
+rectangle "Permissões\nRelatório" as CT_A6
+CT_A1 -down-> A1
+CT_A2 -down-> A2
+CT_A3 -down-> A3
+CT_A4 -down-> A4
+CT_A5 -down-> A5
+CT_A6 -down-> A6
+
+' =====================
+' OUTPUTS
+' =====================
+rectangle "Token JWT\nUsuário Autenticado" as OUT_A1
+rectangle "Empresa Cadastrada\nValidação" as OUT_A2
+rectangle "Transação Processada\nCategoria" as OUT_A3
+rectangle "Dados NF-e\nTransação" as OUT_A4
+rectangle "Status Assinatura\nLimites" as OUT_A5
+rectangle "Dashboard\nRelatórios" as OUT_A6
+A1 -right-> OUT_A1
+A2 -right-> OUT_A2
+A3 -right-> OUT_A3
+A4 -right-> OUT_A4
+A5 -right-> OUT_A5
+A6 -right-> OUT_A6
+
+' =====================
+' MECHANISMS
+' =====================
+rectangle "JWT Auth\nBanco Usuários" as M_A1
+rectangle "Validador CNPJ\nBanco Empresas" as M_A2
+rectangle "Motor Categoria\nBanco Transações" as M_A3
+rectangle "Parser XML/PDF\nIA Extração" as M_A4
+rectangle "Gateway Pagamento\nBanco Assinaturas" as M_A5
+rectangle "Motor Relatórios\nCache Redis" as M_A6
+M_A1 -up-> A1
+M_A2 -up-> A2
+M_A3 -up-> A3
+M_A4 -up-> A4
+M_A5 -up-> A5
+M_A6 -up-> A6
+
+' Fluxos internos entre funções
+A1 -[bold]-> A2 : Usuário
+A2 -[bold]-> A3 : Empresa
+A3 -[bold]-> A6 : Transações
+A4 -[bold]-> A3 : NF-e -> Transação
+A5 -[bold]-> A3 : Limites
+A5 -[bold]-> A6 : Permissões
+
+legend right
+<b>IDEF0 Nível 1</b>\nEsquerda: Inputs | Topo: Controls\nDireita: Outputs | Baixo: Mechanisms
+endlegend
+
+@enduml

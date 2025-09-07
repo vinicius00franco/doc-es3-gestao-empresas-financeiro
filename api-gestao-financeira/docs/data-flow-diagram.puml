@@ -1,0 +1,129 @@
+@startuml
+!theme plain
+title DFD - Sistema de Gestão Financeira (Simplificado Estável)
+
+' =====================
+' Estilo / Aparência
+' =====================
+skinparam backgroundColor #E4F1FA
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+skinparam shadowing false
+skinparam dpi 150
+skinparam ArrowColor #2F4858
+skinparam ArrowThickness 1.2
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam wrapWidth 160
+skinparam maxMessageSize 160
+skinparam nodesep 70
+skinparam ranksep 90
+
+' Estilos por tipo (estereótipos)
+skinparam rectangle<<external>> {
+	BackgroundColor #F9D7A6
+	BorderColor #C6892D
+	RoundCorner 8
+}
+skinparam rectangle<<datastore>> {
+	BackgroundColor #FFE8A6
+	BorderColor #D19A00
+	RoundCorner 6
+}
+skinparam circle {
+	BackgroundColor #B8D9A8
+	BorderColor #4F6F3E
+}
+skinparam titleFontSize 20
+skinparam titleFontColor #1B2E3C
+
+left to right direction
+
+' (Removidos links ocultos antes da definição dos nós para evitar criação implícita e erro "already defined")
+
+' =====================
+' Entidades Externas
+' =====================
+rectangle "Usuário" as User <<external>>
+rectangle "Sistema de Pagamento" as PaymentGateway <<external>>
+rectangle "Receita Federal" as ReceitaFederal <<external>>
+
+' =====================
+' Processos
+' =====================
+circle "1.0\nAutenticar\nUsuário" as P1
+circle "2.0\nGerenciar\nEmpresas" as P2
+circle "3.0\nProcessar\nTransações" as P3
+circle "4.0\nProcessar\nNotas Fiscais" as P4
+circle "5.0\nGerenciar\nAssinaturas" as P5
+circle "6.0\nGerar\nDashboard" as P6
+
+' =====================
+' Depósitos de Dados
+' =====================
+rectangle "D1 | Usuários" as D1 <<datastore>>
+rectangle "D2 | Empresas" as D2 <<datastore>>
+rectangle "D3 | Transações" as D3 <<datastore>>
+rectangle "D4 | Categorias" as D4 <<datastore>>
+rectangle "D5 | Fornecedores" as D5 <<datastore>>
+rectangle "D6 | Notas Fiscais" as D6 <<datastore>>
+rectangle "D7 | Assinaturas" as D7 <<datastore>>
+rectangle "D8 | Planos" as D8 <<datastore>>
+rectangle "D9 | Logs" as D9 <<datastore>>
+
+' =====================
+' Fluxos do Usuário
+' =====================
+User -[#2F4858]-> P1 : credenciais
+P1 -[#2F4858]-> User : token JWT
+User -[#2F4858]-> P2 : dados empresa
+P2 -[#2F4858]-> User : empresa criada
+User -[#2F4858]-> P3 : dados transação
+P3 -[#2F4858]-> User : transação processada
+User -[#2F4858]-> P4 : arquivo NF-e
+P4 -[#2F4858]-> User : NF-e processada
+User -[#2F4858]-> P5 : dados assinatura
+P5 -[#2F4858]-> User : status assinatura
+User -[#2F4858]-> P6 : filtros dashboard
+P6 -[#2F4858]-> User : dados dashboard
+
+' =====================
+' Gateways Externos
+' =====================
+PaymentGateway -[#7A4B87]-> P5 : confirmação pagamento
+P5 -[#7A4B87]-> PaymentGateway : dados cobrança
+ReceitaFederal -[#7A4B87]-> P4 : validação NF-e
+
+' =====================
+' Processo <-> Dados
+' =====================
+P1 <-> D1 : R/W usuários
+P1 -[#grey,dashed]-> D9 : log acesso
+P2 <-> D2 : R/W empresas
+P2 -[#grey,dashed]-> D9 : log empresa
+P3 <-> D3 : R/W transações
+P3 <-> D4 : R/W categorias
+P3 <-> D5 : R/W fornecedores
+P3 -[#grey,dashed]-> D9 : log transação
+P4 <-> D6 : R/W notas fiscais
+P4 -[#2F4858]-> D3 : transação NF-e
+P4 -[#2F4858]-> D5 : fornecedor NF-e
+P5 <-> D7 : R/W assinaturas
+P5 <-> D8 : R/W planos
+P5 -[#grey,dashed]-> D9 : log assinatura
+D3 -[#0B6E4F]-> P6 : consultar transações
+D6 -[#0B6E4F]-> P6 : consultar NF-e
+D2 -[#0B6E4F]-> P6 : consultar empresas
+
+' =====================
+' Inter‑Processos
+' =====================
+P3 -[#1F6FB2,bold]-> P5 : verificar limites
+P5 -[#1F6FB2,bold]-> P3 : limite aprovado
+P4 -[#1F6FB2,bold]-> P3 : criar transação NF
+
+legend right
+<b>Legenda</b>\nProcesso: Círculo Verde\nEntidade Externa: Retângulo Laranja\nDepósito de Dados: Retângulo Amarelo\nAzul escuro: Fluxos usuário/dados\nRoxo: Sistemas externos\nVerde escuro: Consultas dashboard\nCinza tracejado: Logs\nAzul vivo: Inter‑processos críticos
+endlegend
+
+@enduml

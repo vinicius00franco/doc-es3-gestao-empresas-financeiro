@@ -1,0 +1,50 @@
+@startuml
+!theme plain
+title IDEF0 Nível 0 - Sistema de Gestão Financeira
+
+skinparam linetype ortho
+skinparam backgroundColor #F7FAFC
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam ArrowColor #2F4858
+skinparam ArrowThickness 1.2
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4858
+  RoundCorner 10
+}
+skinparam note {
+  BackgroundColor #E8F1FA
+  BorderColor #2F4858
+}
+skinparam titleFontSize 20
+skinparam titleFontColor #1F4E79
+
+rectangle "GERENCIAR FINANÇAS EMPRESARIAIS\nA0" as A0
+
+' Inputs (esquerda)
+note left of A0
+  <b>INPUTS</b>\n  Usuários\n  Empresas\n  Transações\n  NF-e (XML/PDF)\n  Fornecedores\n  Pedidos Relatórios
+end note
+
+' Controls (topo)
+note top of A0
+  <b>CONTROLS</b>\n  Legislação Fiscal\n  Regras Negócio\n  Políticas Segurança\n  Limites Plano\n  Padrões Categoria\n  Validação CNPJ/CPF
+end note
+
+' Outputs (direita)
+note right of A0
+  <b>OUTPUTS</b>\n  Relatórios\n  Dashboard\n  Transações Categorizadas\n  Dados NF-e\n  Alertas/Notificações\n  Dados Exportação
+end note
+
+' Mechanisms (baixo)
+note bottom of A0
+  <b>MECHANISMS</b>\n  Django REST API\n  PostgreSQL\n  JWT Auth\n  Parser NF-e\n  Gateway Pagamento\n  Multi-tenancy\n  Celery/Redis
+end note
+
+legend right
+<b>IDEF0</b>\nInput (esquerda) | Control (topo) | Output (direita) | Mechanism (baixo)
+endlegend
+
+@enduml

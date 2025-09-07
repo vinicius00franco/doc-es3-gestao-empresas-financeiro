@@ -1,0 +1,121 @@
+@startuml
+!theme plain
+title Diagrama de Caso de Uso - API Gestão Financeira
+
+skinparam linetype ortho
+skinparam backgroundColor #F6F9FC
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam ArrowColor #2F4858
+skinparam ArrowThickness 1.1
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4858
+  FontColor #0F2E3D
+}
+skinparam package {
+  BackgroundColor #E8F1FA
+  BorderColor #2F4858
+}
+skinparam titleFontSize 20
+skinparam titleFontColor #1F4E79
+left to right direction
+
+actor "Usuário" as User <<primary>>
+actor "Sistema de Pagamento" as PaymentSystem <<external>>
+actor "Receita Federal" as ReceitaFederal <<external>>
+
+rectangle "Sistema de Gestão Financeira" {
+  
+  package "Autenticação" {
+    usecase "Fazer Login" as UC1
+    usecase "Registrar Usuário" as UC2
+    usecase "Recuperar Senha" as UC3
+    usecase "Gerenciar Configurações" as UC4
+  }
+  
+  package "Gestão de Empresas" {
+    usecase "Cadastrar Empresa" as UC5
+    usecase "Editar Empresa" as UC6
+    usecase "Definir Empresa Padrão" as UC7
+    usecase "Listar Empresas" as UC8
+  }
+  
+  package "Gestão Financeira" {
+    usecase "Criar Transação" as UC9
+    usecase "Editar Transação" as UC10
+    usecase "Excluir Transação" as UC11
+    usecase "Listar Transações" as UC12
+    usecase "Gerenciar Categorias" as UC13
+    usecase "Gerenciar Fornecedores" as UC14
+  }
+  
+  package "Processamento Fiscal" {
+    usecase "Upload Nota Fiscal" as UC15
+    usecase "Processar XML/PDF" as UC16
+    usecase "Extrair Dados NF-e" as UC17
+    usecase "Criar Transação da NF" as UC18
+  }
+  
+  package "Assinaturas" {
+    usecase "Contratar Plano" as UC19
+    usecase "Alterar Plano" as UC20
+    usecase "Cancelar Assinatura" as UC21
+    usecase "Verificar Limites" as UC22
+  }
+  
+  package "Dashboard e Relatórios" {
+    usecase "Visualizar Dashboard" as UC23
+    usecase "Gerar Relatórios" as UC24
+    usecase "Exportar Dados" as UC25
+  }
+}
+
+' Relacionamentos do Usuário
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+User --> UC11
+User --> UC12
+User --> UC13
+User --> UC14
+User --> UC15
+User --> UC16
+User --> UC18
+User --> UC19
+User --> UC20
+User --> UC21
+User --> UC23
+User --> UC24
+User --> UC25
+
+' Relacionamentos do Sistema de Pagamento
+PaymentSystem --> UC19
+PaymentSystem --> UC20
+PaymentSystem --> UC21
+
+' Relacionamentos da Receita Federal
+ReceitaFederal --> UC17
+
+' Relacionamentos internos
+UC16 --> UC17 : <<include>>
+UC17 --> UC18 : <<extend>>
+UC9 --> UC22 : <<include>>
+UC5 --> UC22 : <<include>>
+UC24 --> UC22 : <<include>>
+UC25 --> UC22 : <<include>>
+
+legend right
+<b>Legenda</b>\nActor <<primary>>: Usuário principal\nActor <<external>>: Sistema Externo\n<<include>> Dependência obrigatória\n<<extend>> Comportamento opcional
+endlegend
+
+@enduml

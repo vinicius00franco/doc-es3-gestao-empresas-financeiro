@@ -1,0 +1,231 @@
+@startuml
+!theme plain
+title DER - Sistema de Gestão Financeira
+
+' =====================
+' Estilo Global
+' =====================
+skinparam linetype ortho
+skinparam backgroundColor #F5F9FC
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam ArrowColor #2F4858
+skinparam ArrowThickness 1.2
+skinparam wrapWidth 180
+skinparam maxMessageSize 180
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4858
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4858
+  FontColor #0F2E3D
+}
+skinparam titleFontSize 20
+skinparam titleFontColor #1F4E79
+
+' Paleta por domínio via estereótipos
+skinparam entity<<auth>> BackgroundColor #E3F2FD
+skinparam entity<<auth>> BorderColor #1E88E5
+skinparam entity<<finance>> BackgroundColor #E8F5E9
+skinparam entity<<finance>> BorderColor #43A047
+skinparam entity<<fiscal>> BackgroundColor #FFF3E0
+skinparam entity<<fiscal>> BorderColor #FB8C00
+skinparam entity<<log>> BackgroundColor #F3E5F5
+skinparam entity<<log>> BorderColor #8E24AA
+
+hide empty members
+
+entity "Usuario" <<auth>> {
+  * id : INTEGER <<PK>>
+  --
+  * nome : VARCHAR(255)
+  * email : VARCHAR(255) <<UK>>
+  * password : VARCHAR(128)
+  * ativo : BOOLEAN
+  * criado_em : DATETIME
+  * atualizado_em : DATETIME
+}
+
+entity "ConfiguracaoUsuario" <<auth>> {
+  * id : INTEGER <<PK>>
+  * usuario_id : INTEGER <<FK>>
+  --
+  * tema : VARCHAR(10)
+  * moeda : VARCHAR(3)
+  * formato_data : VARCHAR(10)
+  * fuso_horario : VARCHAR(50)
+  * notificacoes_email : BOOLEAN
+  * notificacoes_push : BOOLEAN
+  * backup_automatico : BOOLEAN
+  * criado_em : DATETIME
+  * atualizado_em : DATETIME
+}
+
+entity "TokenRecuperacao" <<auth>> {
+  * id : INTEGER <<PK>>
+  * usuario_id : INTEGER <<FK>>
+  --
+  * token : VARCHAR(255) <<UK>>
+  * usado : BOOLEAN
+  * expira_em : DATETIME
+  * criado_em : DATETIME
+}
+
+entity "LogAtividade" <<log>> {
+  * id : INTEGER <<PK>>
+  * usuario_id : INTEGER <<FK>>
+  --
+  * acao : VARCHAR(100)
+  * detalhes : JSON
+  * ip_address : INET
+  * user_agent : TEXT
+  * criado_em : DATETIME
+}
+
+entity "Plano" <<finance>> {
+  * id : INTEGER <<PK>>
+  --
+  * nome : VARCHAR(50) <<UK>>
+  * descricao : TEXT
+  * preco : DECIMAL(10,2)
+  * limite_transacoes : INTEGER
+  * limite_empresas : INTEGER
+  * permite_relatorios : BOOLEAN
+  * permite_exportacao : BOOLEAN
+  * permite_notas_fiscais : BOOLEAN
+  * ativo : BOOLEAN
+  * criado_em : DATETIME
+}
+
+entity "Assinatura" <<finance>> {
+  * id : INTEGER <<PK>>
+  * usuario_id : INTEGER <<FK>>
+  * plano_id : INTEGER <<FK>>
+  --
+  * status : VARCHAR(15)
+  * data_inicio : DATE
+  * data_fim : DATE
+  * valor_pago : DECIMAL(10,2)
+  * gateway_pagamento : VARCHAR(50)
+  * id_transacao_gateway : VARCHAR(255)
+  * criado_em : DATETIME
+  * atualizado_em : DATETIME
+}
+
+entity "Empresa" <<finance>> {
+  * id : INTEGER <<PK>>
+  * usuario_id : INTEGER <<FK>>
+  --
+  * cnpj : VARCHAR(18)
+  * razao_social : VARCHAR(255)
+  * nome_fantasia : VARCHAR(255)
+  * tipo_empresa : VARCHAR(10)
+  * ativa : BOOLEAN
+  * empresa_padrao : BOOLEAN
+  * criado_em : DATETIME
+  * atualizado_em : DATETIME
+}
+
+entity "Categoria" <<finance>> {
+  * id : INTEGER <<PK>>
+  * empresa_id : INTEGER <<FK>>
+  --
+  * tenant_id : VARCHAR(255)
+  * nome : VARCHAR(100)
+  * descricao : TEXT
+  * cor : VARCHAR(7)
+  * icone : VARCHAR(50)
+  * tipo_transacao : VARCHAR(10)
+  * ativa : BOOLEAN
+  * categoria_padrao : BOOLEAN
+  * criado_em : DATETIME
+}
+
+entity "Fornecedor" <<finance>> {
+  * id : INTEGER <<PK>>
+  * empresa_id : INTEGER <<FK>>
+  --
+  * tenant_id : VARCHAR(255)
+  * cnpj : VARCHAR(18)
+  * razao_social : VARCHAR(255)
+  * nome_fantasia : VARCHAR(255)
+  * email : VARCHAR(255)
+  * telefone : VARCHAR(20)
+  * endereco : TEXT
+  * criado_automaticamente : BOOLEAN
+  * ativo : BOOLEAN
+  * criado_em : DATETIME
+  * atualizado_em : DATETIME
+}
+
+entity "Transacao" <<finance>> {
+  * id : INTEGER <<PK>>
+  * empresa_id : INTEGER <<FK>>
+  * categoria_id : INTEGER <<FK>>
+  * fornecedor_id : INTEGER <<FK>>
+  --
+  * tenant_id : VARCHAR(255)
+  * descricao : VARCHAR(255)
+  * valor : DECIMAL(12,2)
+  * data_transacao : DATE
+  * tipo_transacao : VARCHAR(10)
+  * status : VARCHAR(10)
+  * observacoes : TEXT
+  * numero_documento : VARCHAR(100)
+  * forma_pagamento : VARCHAR(20)
+  * recorrente : BOOLEAN
+  * criado_em : DATETIME
+  * atualizado_em : DATETIME
+}
+
+entity "NotaFiscal" <<fiscal>> {
+  * id : INTEGER <<PK>>
+  * empresa_id : INTEGER <<FK>>
+  * fornecedor_id : INTEGER <<FK>>
+  * transacao_id : INTEGER <<FK>>
+  --
+  * arquivo_original : VARCHAR(255)
+  * caminho_arquivo : VARCHAR(255)
+  * tipo_arquivo : VARCHAR(5)
+  * status : VARCHAR(15)
+  * chave_acesso : VARCHAR(44) <<UK>>
+  * cnpj_emissor : VARCHAR(18)
+  * razao_social_emissor : VARCHAR(255)
+  * valor_total : DECIMAL(12,2)
+  * data_emissao : DATE
+  * dados_extraidos : JSON
+  * erro_processamento : TEXT
+  * criado_em : DATETIME
+  * processado_em : DATETIME
+}
+
+' =====================
+' Relacionamentos
+' =====================
+Usuario ||--|| ConfiguracaoUsuario : possui
+Usuario ||--o{ TokenRecuperacao : gera
+Usuario ||--o{ LogAtividade : registra
+Usuario ||--|| Assinatura : possui
+Usuario ||--o{ Empresa : gerencia
+
+Plano ||--o{ Assinatura : define
+
+Empresa ||--o{ Categoria : possui
+Empresa ||--o{ Fornecedor : cadastra
+Empresa ||--o{ Transacao : registra
+Empresa ||--o{ NotaFiscal : processa
+
+Categoria ||--o{ Transacao : categoriza
+Fornecedor ||--o{ Transacao : fornece
+Fornecedor ||--o{ NotaFiscal : emite
+
+Transacao ||--o| NotaFiscal : origina
+
+legend right
+<b>Legenda</b>\n<<auth>> Autenticação / Usuários\n<<finance>> Domínio Financeiro\n<<fiscal>> Fiscal / NF-e\n<<log>> Monitoramento & Log\nPK = chave primária | FK = chave estrangeira | UK = único
+endlegend
+
+@enduml
