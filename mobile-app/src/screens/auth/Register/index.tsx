@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Alert } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { register } from '../../../store/slices/authSlice';
-import { RootState } from '../../../store';
+import { useAuthStore } from '../../../store/authStore';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import { styles } from './styles';
@@ -13,10 +11,9 @@ const Register = ({ navigation }: any) => {
   const [senha, setSenha] = useState('');
   const [confirmSenha, setConfirmSenha] = useState('');
 
-  const dispatch = useDispatch();
-  const { isLoading, error } = useSelector((state: RootState) => (state as any).auth);
+  const { register, isLoading, error, clearError } = useAuthStore();
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!nome || !email || !senha || !confirmSenha) {
       Alert.alert('Erro', 'Preencha todos os campos');
       return;
@@ -25,7 +22,8 @@ const Register = ({ navigation }: any) => {
       Alert.alert('Erro', 'As senhas não coincidem');
       return;
     }
-    dispatch(register({ nome, email, senha }) as any);
+    clearError();
+    await register(nome, email, senha);
   };
 
   return (

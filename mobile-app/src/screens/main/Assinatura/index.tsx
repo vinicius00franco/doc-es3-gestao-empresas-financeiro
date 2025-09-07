@@ -1,18 +1,15 @@
 import React, { useEffect } from 'react';
 import { View, Text, FlatList } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchPlanos } from '../../../store/slices/assinaturaSlice';
-import { RootState } from '../../../store';
+import { useAssinaturaStore } from '../../../store/assinaturaStore';
 import ListItem from '../../../components/ListItem';
 import Loading from '../../../components/Loading';
 import { styles } from './styles';
 
 const Assinatura = () => {
-  const dispatch = useDispatch();
-  const { planos, isLoading } = useSelector((state: RootState) => (state as any).assinatura);
+  const { planos, isLoading, fetchPlanos } = useAssinaturaStore();
 
   useEffect(() => {
-    dispatch(fetchPlanos() as any);
+    fetchPlanos();
   }, []);
 
   if (isLoading) {

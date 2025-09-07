@@ -1,18 +1,15 @@
 import React, { useEffect } from 'react';
 import { View, Text, FlatList } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchNotas } from '../../../store/slices/notaFiscalSlice';
-import { RootState } from '../../../store';
+import { useNotaFiscalStore } from '../../../store/notaFiscalStore';
 import ListItem from '../../../components/ListItem';
 import Loading from '../../../components/Loading';
 import { styles } from './styles';
 
 const NotaFiscal = () => {
-  const dispatch = useDispatch();
-  const { notas, isLoading } = useSelector((state: RootState) => (state as any).notaFiscal);
+  const { notas, isLoading, fetchNotas } = useNotaFiscalStore();
 
   useEffect(() => {
-    dispatch(fetchNotas() as any);
+    fetchNotas();
   }, []);
 
   if (isLoading) {

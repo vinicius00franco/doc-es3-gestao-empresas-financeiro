@@ -1,18 +1,15 @@
 import React, { useEffect } from 'react';
 import { View, Text, FlatList } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchTransacoes } from '../../../store/slices/transacaoSlice';
-import { RootState } from '../../../store';
+import { useTransacaoStore } from '../../../store/transacaoStore';
 import ListItem from '../../../components/ListItem';
 import Loading from '../../../components/Loading';
 import { styles } from './styles';
 
 const Transacao = () => {
-  const dispatch = useDispatch();
-  const { transacoes, isLoading } = useSelector((state: RootState) => (state as any).transacao);
+  const { transacoes, isLoading, fetchTransacoes } = useTransacaoStore();
 
   useEffect(() => {
-    dispatch(fetchTransacoes() as any);
+    fetchTransacoes();
   }, []);
 
   if (isLoading) {

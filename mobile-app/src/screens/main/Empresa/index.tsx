@@ -1,18 +1,15 @@
 import React, { useEffect } from 'react';
 import { View, Text, FlatList } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchEmpresas } from '../../../store/slices/empresaSlice';
-import { RootState } from '../../../store';
+import { useEmpresaStore } from '../../../store/empresaStore';
 import ListItem from '../../../components/ListItem';
 import Loading from '../../../components/Loading';
 import { styles } from './styles';
 
 const Empresa = () => {
-  const dispatch = useDispatch();
-  const { empresas, isLoading } = useSelector((state: RootState) => (state as any).empresa);
+  const { empresas, isLoading, fetchEmpresas } = useEmpresaStore();
 
   useEffect(() => {
-    dispatch(fetchEmpresas() as any);
+    fetchEmpresas();
   }, []);
 
   if (isLoading) {

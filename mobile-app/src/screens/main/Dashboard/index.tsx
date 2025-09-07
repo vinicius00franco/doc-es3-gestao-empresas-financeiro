@@ -1,13 +1,11 @@
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../../store';
+import { useAuthStore } from '../../../store/authStore';
 import Card from '../../../components/Card';
 import { styles } from './styles';
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
-  const { user } = useSelector((state: RootState) => (state as any).auth);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     // Fetch dashboard data if needed

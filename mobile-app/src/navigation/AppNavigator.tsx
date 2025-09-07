@@ -1,15 +1,14 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { useAuthStore } from '../store/authStore';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 
 const Stack = createStackNavigator();
 
 const AppNavigator = () => {
-  const token = useSelector((state: RootState) => state.auth.token);
+  const token = useAuthStore((state) => state.token);
 
   return (
     <NavigationContainer>

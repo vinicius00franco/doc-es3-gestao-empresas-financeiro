@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Alert } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../../../store/slices/authSlice';
-import { RootState } from '../../../store';
+import { useAuthStore } from '../../../store/authStore';
 import Button from '../../../components/Button';
 import Input from '../../../components/Input';
 import { styles } from './styles';
@@ -12,15 +10,15 @@ const Login = ({ navigation }: any) => {
   const [senha, setSenha] = useState('');
   const [applicationId] = useState('com.financialapp'); // Default or from config
 
-  const dispatch = useDispatch();
-  const { isLoading, error } = useSelector((state: RootState) => (state as any).auth);
+  const { login, isLoading, error, clearError } = useAuthStore();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !senha) {
       Alert.alert('Erro', 'Preencha todos os campos');
       return;
     }
-    dispatch(login({ email, senha, applicationId }) as any);
+    clearError();
+    await login(email, senha, applicationId);
   };
 
   return (
