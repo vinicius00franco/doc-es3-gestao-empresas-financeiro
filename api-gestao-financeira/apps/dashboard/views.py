@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count
@@ -8,7 +8,16 @@ from apps.transacoes.models import Transacao, Categoria
 from apps.notas_fiscais.models import NotaFiscal
 
 
+def _parse_date_safely(date_str):
+    """Parse date string safely"""
+    try:
+        return datetime.fromisoformat(date_str).date()
+    except (ValueError, TypeError):
+        return None
+
+
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def dashboard_resumo(request):
     user = request.user
     empresa_padrao = user.empresas.filter(empresa_padrao=True).first()
@@ -22,11 +31,16 @@ def dashboard_resumo(request):
     data_fim = timezone.now().date()
     data_inicio = data_fim - timedelta(days=30)
     
-    # Parâmetros de filtro opcionais
+    # Parâmetros de filtro opcionais com validação
     if request.GET.get('data_inicio'):
-        data_inicio = datetime.strptime(request.GET.get('data_inicio'), '%Y-%m-%d').date()
+        parsed_date = _parse_date_safely(request.GET.get('data_inicio'))
+        if parsed_date:
+            data_inicio = parsed_date
+    
     if request.GET.get('data_fim'):
-        data_fim = datetime.strptime(request.GET.get('data_fim'), '%Y-%m-%d').date()
+        parsed_date = _parse_date_safely(request.GET.get('data_fim'))
+        if parsed_date:
+            data_fim = parsed_date
     
     # Transações no período
     transacoes = Transacao.objects.filter(

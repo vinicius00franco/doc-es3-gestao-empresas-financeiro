@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Transacao, Categoria, Fornecedor
 from apps.empresas.serializers import EmpresaResumoSerializer
+from core.sanitizers import sanitize_text_input, validate_cnpj_format
 
 
 class CategoriaSerializer(serializers.ModelSerializer):
@@ -38,10 +39,19 @@ class FornecedorSerializer(serializers.ModelSerializer):
         return obj.transacao_set.count()
 
     def validate_cnpj(self, value):
-        cnpj = ''.join(filter(str.isdigit, value))
-        if len(cnpj) != 14:
+        if not validate_cnpj_format(value):
             raise serializers.ValidationError("CNPJ deve ter 14 dígitos.")
+        cnpj = ''.join(filter(str.isdigit, value))
         return f"{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:14]}"
+    
+    def validate_razao_social(self, value):
+        return sanitize_text_input(value)
+    
+    def validate_nome_fantasia(self, value):
+        return sanitize_text_input(value) if value else value
+    
+    def validate_endereco(self, value):
+        return sanitize_text_input(value) if value else value
 
 
 class TransacaoSerializer(serializers.ModelSerializer):
@@ -82,6 +92,15 @@ class TransacaoSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Fornecedor não pertence à empresa do usuário.")
         
         return attrs
+    
+    def validate_descricao(self, value):
+        return sanitize_text_input(value)
+    
+    def validate_observacoes(self, value):
+        return sanitize_text_input(value) if value else value
+    
+    def validate_numero_documento(self, value):
+        return sanitize_text_input(value) if value else value
 
 
 class TransacaoResumoSerializer(serializers.ModelSerializer):

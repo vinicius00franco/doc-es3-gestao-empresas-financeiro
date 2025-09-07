@@ -1,0 +1,22 @@
+name: gestao-db
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-gestao_financeira}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD deve ser definido}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - production-network
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+
+networks:
+  production-network:
+    external: true

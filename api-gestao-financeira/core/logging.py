@@ -14,8 +14,7 @@ class RequestFilter(logging.Filter):
     """Preenche campos padrão quando não vierem via extra."""
     def filter(self, record):
         for attr in [
-            'path', 'method', 'user_id', 'client_ip',
-            'status_code', 'response_time', 'correlation_id'
+            'path', 'method', 'status_code', 'response_time', 'correlation_id'
         ]:
             if not hasattr(record, attr):
                 setattr(record, attr, None)
@@ -36,8 +35,6 @@ class RequestLoggingMiddleware(MiddlewareMixin):
                 'response_time': round(response_time, 4),
                 'path': getattr(request, 'path', None),
                 'method': getattr(request, 'method', None),
-                'user_id': getattr(getattr(request, 'user', None), 'id', None) if getattr(request, 'user', None) and request.user.is_authenticated else None,
-                'client_ip': _get_client_ip(request),
                 'correlation_id': getattr(request, 'correlation_id', None),
             }
             app_logger.info('request', extra=payload)

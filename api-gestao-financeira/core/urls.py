@@ -10,6 +10,10 @@ def health_check(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health-check'),
+    # django-prometheus expõe /metrics quando incluído na raiz
+    path('', include('django_prometheus.urls')),
+    # Também incluir explicitamente para garantir
+    path('metrics/', include('django_prometheus.urls')),
     path('api/v1/', include('apps.usuarios.urls')),
     path('api/v1/empresas/', include('apps.empresas.urls')),
     path('api/v1/', include('apps.transacoes.urls')),

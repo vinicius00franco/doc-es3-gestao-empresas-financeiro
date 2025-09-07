@@ -1,14 +1,16 @@
 from pathlib import Path
-from decouple import config
+import os
 from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
-
-DEBUG = config('DEBUG', default=True, cast=bool)
-
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me-in-production')
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('1', 'true', 'yes')
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+# Adiciona hostnames internos comuns em ambiente docker
+for internal_host in ['app', 'django_app', 'nginx', 'nginx_proxy']:
+    if internal_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(internal_host)
 
 # Application definition
 DJANGO_APPS = [
@@ -24,6 +26,7 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'django_prometheus',
 ]
 
 LOCAL_APPS = [
@@ -38,6 +41,7 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -48,6 +52,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.CorrelationIdMiddleware',
     'core.logging.RequestLoggingMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -74,11 +79,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='gestao_financeira'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+        'NAME': os.environ.get('DB_NAME') or os.environ.get('DATABASE_NAME', 'gestao_financeira'),
+        'USER': os.environ.get('DB_USER') or os.environ.get('DATABASE_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD') or os.environ.get('DATABASE_PASSWORD', 'postgres'),
+        'HOST': os.environ.get('DB_HOST') or os.environ.get('DATABASE_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT') or os.environ.get('DATABASE_PORT', '5432'),
     }
 }
 
@@ -114,7 +119,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Garante diretório de logs (não falha se já existir)
 LOG_DIR = BASE_DIR / 'logs'
 LOG_DIR.mkdir(exist_ok=True)
 
@@ -131,6 +135,15 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+        'login': '5/min',
+    }
 }
 
 # JWT Settings
@@ -153,33 +166,30 @@ CORS_ALLOW_CREDENTIALS = True
 AUTH_USER_MODEL = 'usuarios.Usuario'
 
 # Celery Configuration
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
-# Cache Configuration
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': config('CELERY_BROKER_URL', default='redis://localhost:6379/1'),
+REDIS_URL = os.environ.get('REDIS_URL')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_URL,
+        }
     }
-}
-
-# Session Configuration for Load Balancing
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
 
 # Logging Configuration (dinâmico para evitar erros de permissão em dev)
-USE_FILE_LOGGING = config('USE_FILE_LOGGING', default=not DEBUG, cast=bool)
+USE_FILE_LOGGING = os.environ.get('USE_FILE_LOGGING', 'False').lower() in ('1','true','yes') and not DEBUG
 
 BASE_FORMATTER = {
     '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-    # Usar "fmt" (parametro aceito pelo JsonFormatter) para garantir saída JSON pura.
-    # Mantemos campos relevantes; Filebeat fará json.keys_under_root=true.
-    'fmt': '%(asctime)s %(levelname)s %(name)s %(message)s %(correlation_id)s %(path)s %(method)s %(status_code)s %(user_id)s %(response_time)s %(client_ip)s'
+    'fmt': '%(asctime)s %(levelname)s %(name)s %(message)s %(correlation_id)s %(path)s %(method)s %(status_code)s %(response_time)s'
 }
 
 LOGGING = {
@@ -254,6 +264,5 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    # Proxy Headers for Load Balancer
     USE_X_FORWARDED_HOST = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
