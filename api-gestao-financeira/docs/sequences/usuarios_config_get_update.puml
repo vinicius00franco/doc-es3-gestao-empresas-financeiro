@@ -1,0 +1,21 @@
+@startuml usuarios_config_get_update
+title Configuração (GET/PUT /users/configuracao/)
+actor Cliente
+boundary API as B
+control "ConfiguracaoView" as V
+database DB
+
+Cliente -> B : GET /users/configuracao
+B -> V : dispatch
+V -> DB : SELECT configuracao by user
+DB --> V : configuracao
+V --> B : 200 JSON
+B --> Cliente : 200
+
+Cliente -> B : PUT /users/configuracao {prefs}
+B -> V : dispatch
+V -> DB : UPDATE configuracao
+DB --> V : configuracao_atualizada
+V --> B : 200 JSON
+B --> Cliente : 200
+@enduml

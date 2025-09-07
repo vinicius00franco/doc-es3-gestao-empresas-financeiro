@@ -1,0 +1,78 @@
+@startuml class_diagram
+title Diagrama de Classes Principal
+
+class Usuario {
+  id
+  nome
+  email
+  senha (hash)
+}
+
+class Empresa {
+  id
+  cnpj
+  razao_social
+  empresa_padrao: bool
+  +save() ajusta padrão
+}
+
+class Categoria {
+  tipo_transacao (entrada|saida)
+  nome
+  categoria_padrao: bool
+}
+
+class Fornecedor {
+  cnpj
+  razao_social
+  criado_automaticamente: bool
+}
+
+class Transacao {
+  descricao
+  valor
+  data_transacao
+  tipo_transacao
+  status
+  numero_documento
+}
+
+class NotaFiscal {
+  arquivo_original
+  status
+  valor_total
+  data_emissao
+}
+
+class Plano {
+  nome
+  preco
+  limite_transacoes
+  limite_empresas
+}
+
+class Assinatura {
+  status
+  data_inicio
+  data_fim
+  +pode_criar_transacao()
+  +pode_criar_empresa()
+}
+
+Usuario "1" -- "*" Empresa : possui >
+Empresa "1" -- "*" Categoria
+Empresa "1" -- "*" Fornecedor
+Empresa "1" -- "*" Transacao
+Empresa "1" -- "*" NotaFiscal
+Categoria "1" -- "*" Transacao
+Fornecedor "1" -- "*" Transacao
+Transacao "1" -- "0..1" NotaFiscal : origem
+Usuario "1" -- "1" Assinatura
+Plano "1" -- "*" Assinatura
+
+note bottom of NotaFiscal
+Relaciona opcionalmente
+a Fornecedor e Transacao
+end note
+
+@enduml

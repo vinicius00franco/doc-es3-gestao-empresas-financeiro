@@ -1,0 +1,76 @@
+@startuml transacoes_crud
+!define DIRECTION left to right direction
+title Transações CRUD (GET/POST/PUT/DELETE /transacoes/)
+actor Cliente
+boundary API as B
+control "TransacaoListCreateView" as LV
+control "TransacaoDetailView" as DV
+entity "TransacaoSerializer" as S
+entity "TenantViewMixin" as M
+database DB
+
+== GET List ==
+Cliente -> B : GET /transacoes/?filters
+B -> LV : get()
+LV -> M : get_queryset()
+M -> DB : SELECT Transacao by tenant
+DB --> M : transacoes
+M --> LV : queryset
+LV -> LV : apply_filters()
+LV -> S : serialize(transacoes)
+S --> LV : serialized_data
+LV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== POST Create ==
+Cliente -> B : POST /transacoes/ {data}
+B -> LV : post()
+LV -> S : validate(data)
+S --> LV : validated_data
+LV -> DB : CREATE Transacao
+DB --> LV : transacao
+LV -> S : serialize(transacao)
+S --> LV : serialized_data
+LV --> B : 201 JSON
+B --> Cliente : 201 Created
+
+== GET Detail ==
+Cliente -> B : GET /transacoes/{id}/
+B -> DV : get()
+DV -> M : get_queryset()
+M -> DB : SELECT Transacao by id and tenant
+DB --> M : transacao
+M --> DV : object
+DV -> S : serialize(transacao)
+S --> DV : serialized_data
+DV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== PUT Update ==
+Cliente -> B : PUT /transacoes/{id}/ {data}
+B -> DV : put()
+DV -> M : get_object()
+M -> DB : SELECT Transacao by id and tenant
+DB --> M : transacao
+M --> DV : object
+DV -> S : validate(data)
+S --> DV : validated_data
+DV -> DB : UPDATE Transacao
+DB --> DV : transacao_atualizada
+DV -> S : serialize(transacao)
+S --> DV : serialized_data
+DV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== DELETE ==
+Cliente -> B : DELETE /transacoes/{id}/
+B -> DV : delete()
+DV -> M : get_object()
+M -> DB : SELECT Transacao by id and tenant
+DB --> M : transacao
+M --> DV : object
+DV -> DB : DELETE Transacao
+DB --> DV : success
+DV --> B : 204 No Content
+B --> Cliente : 204 No Content
+@enduml

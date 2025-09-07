@@ -1,0 +1,49 @@
+@startuml assinaturas_fluxo
+!define DIRECTION left to right direction
+title Assinaturas (GET/POST planos e assinaturas)
+actor Cliente
+boundary API as B
+control "PlanoListView" as PLV
+control "AssinaturaAtualView" as AAV
+control "upgrade_assinatura" as UV
+control "confirmar_pagamento" as CPV
+database DB
+
+== GET Planos ==
+Cliente -> B : GET /api/v1/planos/
+B -> PLV : get()
+PLV -> DB : SELECT Plano WHERE ativo=True
+DB --> PLV : planos
+PLV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== GET Assinatura Atual ==
+Cliente -> B : GET /api/v1/assinaturas/atual/
+B -> AAV : get()
+AAV -> DB : SELECT Assinatura by usuario
+DB --> AAV : assinatura
+AAV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== POST Upgrade ==
+Cliente -> B : POST /api/v1/assinaturas/upgrade/ {plano_id}
+B -> UV : post()
+UV -> DB : SELECT Plano by id
+DB --> UV : plano
+UV -> DB : SELECT Assinatura by usuario
+DB --> UV : assinatura_atual
+UV -> UV : validate_upgrade()
+UV -> DB : UPDATE Assinatura SET plano=novo_plano
+DB --> UV : assinatura_atualizada
+UV --> B : 200 {message: "Upgrade realizado"}
+B --> Cliente : 200 OK
+
+== POST Confirmar Pagamento ==
+Cliente -> B : POST /api/v1/assinaturas/confirmar-pagamento/ {transaction_id}
+B -> CPV : post()
+CPV -> CPV : validate_payment_gateway()
+CPV -> DB : UPDATE Assinatura SET status='ativa'
+DB --> CPV : assinatura_confirmada
+CPV --> B : 200 {message: "Pagamento confirmado"}
+B --> Cliente : 200 OK
+@enduml

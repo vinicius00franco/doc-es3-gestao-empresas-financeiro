@@ -1,0 +1,23 @@
+@startuml usuarios_auth_register
+title Registro de Usuário (POST /auth/register/)
+actor Cliente
+boundary API as B
+control "View registro" as V
+entity "UsuarioRegistroSerializer" as S
+database DB as DB
+
+Cliente -> B : POST /auth/register {dados}
+B -> V : dispatch(request)
+V -> S : validar(dados)
+S --> V : dados_validados | erros
+V -> DB : INSERT usuario
+DB --> V : usuario{id,email,...}
+V --> B : 201 {payload usuario}
+B --> Cliente : 201 JSON
+
+note right of S
+Campos: nome,email,senha
+Valida unicidade email
+Hash da senha (model)
+end note
+@enduml

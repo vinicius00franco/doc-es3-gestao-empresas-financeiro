@@ -1,0 +1,107 @@
+@startuml views_architecture
+!define DIRECTION left to right direction
+
+class TenantViewMixin {
+  +get_queryset(): QuerySet
+  +get_tenant_id(): str
+  +filter_by_tenant(): QuerySet
+}
+
+class "generics.ListCreateAPIView" as ListCreateAPIView {
+  +get(): Response
+  +post(): Response
+  +get_queryset(): QuerySet
+  +get_serializer(): Serializer
+}
+
+class "generics.RetrieveUpdateDestroyAPIView" as RetrieveUpdateDestroyAPIView {
+  +get(): Response
+  +put(): Response
+  +patch(): Response
+  +delete(): Response
+  +get_object(): Model
+}
+
+class "generics.RetrieveUpdateAPIView" as RetrieveUpdateAPIView {
+  +get(): Response
+  +put(): Response
+  +patch(): Response
+  +get_object(): Model
+}
+
+class TransacaoListCreateView {
+  +serializer_class: TransacaoSerializer
+  +filter_backends: list
+  +filterset_fields: list
+  +search_fields: list
+  +ordering_fields: list
+  --
+  +get_queryset(): QuerySet
+}
+
+class TransacaoDetailView {
+  +serializer_class: TransacaoSerializer
+  --
+  +get_queryset(): QuerySet
+}
+
+class CategoriaListCreateView {
+  +serializer_class: CategoriaSerializer
+  +filter_backends: list
+  +search_fields: list
+  --
+  +get_queryset(): QuerySet
+}
+
+class CategoriaDetailView {
+  +serializer_class: CategoriaSerializer
+  --
+  +get_queryset(): QuerySet
+}
+
+class FornecedorListCreateView {
+  +serializer_class: FornecedorSerializer
+  +filter_backends: list
+  +search_fields: list
+  --
+  +get_queryset(): QuerySet
+}
+
+class FornecedorDetailView {
+  +serializer_class: FornecedorSerializer
+  --
+  +get_queryset(): QuerySet
+}
+
+class PerfilView {
+  +serializer_class: UsuarioSerializer
+  +permission_classes: list
+  --
+  +get_object(): Usuario
+}
+
+class ConfiguracaoView {
+  +serializer_class: ConfiguracaoUsuarioSerializer
+  +permission_classes: list
+  --
+  +get_object(): ConfiguracaoUsuario
+}
+
+TenantViewMixin <|-- TransacaoListCreateView
+TenantViewMixin <|-- TransacaoDetailView
+TenantViewMixin <|-- CategoriaListCreateView
+TenantViewMixin <|-- CategoriaDetailView
+TenantViewMixin <|-- FornecedorListCreateView
+TenantViewMixin <|-- FornecedorDetailView
+
+ListCreateAPIView <|-- TransacaoListCreateView
+ListCreateAPIView <|-- CategoriaListCreateView
+ListCreateAPIView <|-- FornecedorListCreateView
+
+RetrieveUpdateDestroyAPIView <|-- TransacaoDetailView
+RetrieveUpdateDestroyAPIView <|-- CategoriaDetailView
+RetrieveUpdateDestroyAPIView <|-- FornecedorDetailView
+
+RetrieveUpdateAPIView <|-- PerfilView
+RetrieveUpdateAPIView <|-- ConfiguracaoView
+@enduml

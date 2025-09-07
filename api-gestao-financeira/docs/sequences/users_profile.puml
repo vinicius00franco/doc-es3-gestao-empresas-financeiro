@@ -1,0 +1,31 @@
+@startuml users_profile
+!define DIRECTION left to right direction
+title Perfil do Usuário (GET/PUT /users/profile/)
+actor Cliente
+boundary API as B
+control "PerfilView" as V
+entity "UsuarioSerializer" as S
+database DB
+
+== GET Profile ==
+Cliente -> B : GET /users/profile
+B -> V : get()
+V -> V : get_object() -> request.user
+V -> S : serialize(usuario)
+S --> V : serialized_data
+V --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== PUT Profile ==
+Cliente -> B : PUT /users/profile {nome, email}
+B -> V : put()
+V -> V : get_object() -> request.user
+V -> S : validate(data)
+S --> V : validated_data
+V -> DB : UPDATE Usuario
+DB --> V : usuario_atualizado
+V -> S : serialize(usuario)
+S --> V : serialized_data
+V --> B : 200 JSON
+B --> Cliente : 200 OK
+@enduml

@@ -1,0 +1,70 @@
+@startuml empresas_crud
+!define DIRECTION left to right direction
+title Empresas CRUD (GET/POST/PUT/DELETE /empresas/)
+actor Cliente
+boundary API as B
+control "EmpresaListCreateView" as LV
+control "EmpresaDetailView" as DV
+control "definir_empresa_padrao" as PV
+entity "EmpresaSerializer" as S
+database DB
+
+== GET List ==
+Cliente -> B : GET /api/v1/empresas/
+B -> LV : get()
+LV -> DB : SELECT Empresa by usuario
+DB --> LV : empresas
+LV -> S : serialize(empresas)
+S --> LV : serialized_data
+LV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== POST Create ==
+Cliente -> B : POST /api/v1/empresas/ {cnpj, razao_social, tipo_empresa}
+B -> LV : post()
+LV -> S : validate(data)
+S -> S : validate_cnpj_unique()
+S --> LV : validated_data
+LV -> DB : CREATE Empresa
+DB -> DB : check_first_empresa() -> set_padrao=True
+DB --> LV : empresa
+LV -> S : serialize(empresa)
+S --> LV : serialized_data
+LV --> B : 201 JSON
+B --> Cliente : 201 Created
+
+== PUT Update ==
+Cliente -> B : PUT /api/v1/empresas/{id}/ {data}
+B -> DV : put()
+DV -> DB : SELECT Empresa by id and usuario
+DB --> DV : empresa
+DV -> S : validate(data)
+S --> DV : validated_data
+DV -> DB : UPDATE Empresa
+DB --> DV : empresa_atualizada
+DV -> S : serialize(empresa)
+S --> DV : serialized_data
+DV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== POST Set Default ==
+Cliente -> B : POST /api/v1/empresas/{id}/definir-padrao/
+B -> PV : post()
+PV -> DB : SELECT Empresa by id and usuario
+DB --> PV : empresa
+PV -> DB : UPDATE all empresas SET empresa_padrao=False
+PV -> DB : UPDATE empresa SET empresa_padrao=True
+DB --> PV : success
+PV --> B : 200 {message: "Empresa definida como padrão"}
+B --> Cliente : 200 OK
+
+== DELETE ==
+Cliente -> B : DELETE /api/v1/empresas/{id}/
+B -> DV : delete()
+DV -> DB : SELECT Empresa by id and usuario
+DB --> DV : empresa
+DV -> DB : DELETE Empresa
+DB --> DV : success
+DV --> B : 204 No Content
+B --> Cliente : 204 No Content
+@enduml

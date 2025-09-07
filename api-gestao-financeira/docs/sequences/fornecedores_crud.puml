@@ -1,0 +1,65 @@
+@startuml fornecedores_crud
+!define DIRECTION left to right direction
+title Fornecedores CRUD (GET/POST/PUT/DELETE /fornecedores/)
+actor Cliente
+boundary API as B
+control "FornecedorListCreateView" as LV
+control "FornecedorDetailView" as DV
+entity "FornecedorSerializer" as S
+entity "TenantViewMixin" as M
+database DB
+
+== GET List ==
+Cliente -> B : GET /fornecedores/?search=razao_social
+B -> LV : get()
+LV -> M : get_queryset()
+M -> DB : SELECT Fornecedor by tenant WHERE ativo=True
+DB --> M : fornecedores
+M --> LV : queryset
+LV -> LV : apply_search_filter()
+LV -> S : serialize(fornecedores)
+S --> LV : serialized_data
+LV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== POST Create ==
+Cliente -> B : POST /fornecedores/ {cnpj, razao_social, email}
+B -> LV : post()
+LV -> S : validate(data)
+S -> S : validate_cnpj_unique()
+S --> LV : validated_data
+LV -> DB : CREATE Fornecedor
+DB --> LV : fornecedor
+LV -> S : serialize(fornecedor)
+S --> LV : serialized_data
+LV --> B : 201 JSON
+B --> Cliente : 201 Created
+
+== PUT Update ==
+Cliente -> B : PUT /fornecedores/{id}/ {data}
+B -> DV : put()
+DV -> M : get_object()
+M -> DB : SELECT Fornecedor by id and tenant
+DB --> M : fornecedor
+M --> DV : object
+DV -> S : validate(data)
+S --> DV : validated_data
+DV -> DB : UPDATE Fornecedor
+DB --> DV : fornecedor_atualizado
+DV -> S : serialize(fornecedor)
+S --> DV : serialized_data
+DV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== DELETE ==
+Cliente -> B : DELETE /fornecedores/{id}/
+B -> DV : delete()
+DV -> M : get_object()
+M -> DB : SELECT Fornecedor by id and tenant
+DB --> M : fornecedor
+M --> DV : object
+DV -> DB : DELETE Fornecedor
+DB --> DV : success
+DV --> B : 204 No Content
+B --> Cliente : 204 No Content
+@enduml

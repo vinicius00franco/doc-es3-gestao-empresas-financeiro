@@ -1,0 +1,21 @@
+@startuml usuarios_auth_login
+title Login (POST /auth/login/)
+actor Cliente
+boundary API as B
+control "View login" as V
+entity "UsuarioLoginSerializer" as S
+control "CustomRefreshToken" as JWT
+database DB
+
+Cliente -> B : POST /auth/login {email,senha}
+B -> V : dispatch
+V -> S : validar(email,senha)
+S -> DB : SELECT usuario + empresa
+DB --> S : usuario,empresa
+S --> V : valido(usuario,empresa)
+V -> JWT : gerar refresh/access
+JWT --> V : tokens
+V --> B : 200 {access,refresh,user,application_id}
+B --> Cliente : 200 JSON
+
+@enduml

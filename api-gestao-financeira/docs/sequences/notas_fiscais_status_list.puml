@@ -1,0 +1,31 @@
+@startuml notas_fiscais_status_list
+!define DIRECTION left to right direction
+title Notas Fiscais Status e List (GET /invoices/)
+actor Cliente
+boundary API as B
+control "NotaFiscalStatusView" as SV
+control "NotaFiscalListView" as LV
+entity "NotaFiscalSerializer" as S
+database DB
+
+== GET Status ==
+Cliente -> B : GET /api/v1/invoices/{id}/status/
+B -> SV : get()
+SV -> DB : SELECT NotaFiscal by id and empresa
+DB --> SV : nota_fiscal
+SV -> S : serialize(nota_fiscal)
+S --> SV : serialized_data
+SV --> B : 200 {id, status, progress, error}
+B --> Cliente : 200 OK
+
+== GET List ==
+Cliente -> B : GET /api/v1/invoices/?status=processed
+B -> LV : get()
+LV -> DB : SELECT NotaFiscal by empresa
+DB --> LV : notas_fiscais
+LV -> LV : apply_filters()
+LV -> S : serialize(notas_fiscais)
+S --> LV : serialized_data
+LV --> B : 200 JSON
+B --> Cliente : 200 OK
+@enduml

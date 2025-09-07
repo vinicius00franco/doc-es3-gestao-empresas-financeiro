@@ -1,0 +1,126 @@
+@startuml assinaturas_complete
+!define DIRECTION left to right direction
+title Assinaturas - Arquitetura Completa
+
+package "URLs" {
+  class AssinaturasURLs {
+    +path('planos/', PlanoListView)
+    +path('assinaturas/atual/', AssinaturaAtualView)
+    +path('assinaturas/upgrade/', upgrade_assinatura)
+    +path('assinaturas/confirmar-pagamento/', confirmar_pagamento)
+  }
+}
+
+package "Views" {
+  class PlanoListView {
+    +GET /planos/
+    +queryset: Plano.objects.filter(ativo=True)
+    +serializer_class: PlanoSerializer
+    +permission_classes: [AllowAny]
+  }
+  
+  class AssinaturaAtualView {
+    +GET /assinaturas/atual/
+    +serializer_class: AssinaturaSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_object(): Assinatura
+  }
+  
+  class "upgrade_assinatura" <<function>> {
+    +POST /assinaturas/upgrade/
+    --
+    +upgrade_assinatura(request): Response
+  }
+  
+  class "confirmar_pagamento" <<function>> {
+    +POST /assinaturas/confirmar-pagamento/
+    --
+    +confirmar_pagamento(request): Response
+  }
+}
+
+package "Serializers" {
+  class PlanoSerializer {
+    +eh_gratuito: BooleanField(read_only=True)
+    +fields: [id, nome, descricao, preco, eh_gratuito, limite_transacoes, limite_empresas, permite_relatorios, permite_exportacao, permite_notas_fiscais]
+  }
+  
+  class AssinaturaSerializer {
+    +plano: PlanoSerializer(read_only=True)
+    +pode_criar_transacao: BooleanField(read_only=True)
+    +pode_criar_empresa: BooleanField(read_only=True)
+    +fields: [id, plano, status, data_inicio, data_fim, valor_pago, pode_criar_transacao, pode_criar_empresa, criado_em, atualizado_em]
+    +read_only_fields: [id, data_inicio, data_fim, valor_pago, criado_em, atualizado_em]
+  }
+  
+  class UpgradeAssinaturaSerializer {
+    +plano_id: IntegerField()
+    --
+    +validate_plano_id(value): int
+  }
+}
+
+package "Models" {
+  class Plano {
+    +id: int
+    +nome: CharField(50, unique=True)
+    +descricao: TextField(blank=True)
+    +preco: DecimalField(10, 2)
+    +limite_transacoes: IntegerField(null=True, blank=True)
+    +limite_empresas: IntegerField(default=1)
+    +permite_relatorios: BooleanField(default=False)
+    +permite_exportacao: BooleanField(default=False)
+    +permite_notas_fiscais: BooleanField(default=False)
+    +ativo: BooleanField(default=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    --
+    +__str__(): str
+    +eh_gratuito(): bool
+  }
+  
+  class Assinatura {
+    +id: int
+    +status: CharField(15, choices=STATUS_CHOICES)
+    +data_inicio: DateField()
+    +data_fim: DateField(null=True, blank=True)
+    +valor_pago: DecimalField(10, 2, null=True)
+    +gateway_pagamento: CharField(50, blank=True)
+    +id_transacao_gateway: CharField(255, blank=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    --
+    +__str__(): str
+    +pode_criar_transacao(): bool
+    +pode_criar_empresa(): bool
+  }
+  
+  class Usuario {
+    +id: int
+    +nome: CharField(255)
+    +email: EmailField(unique=True)
+  }
+}
+
+' Relacionamentos URLs -> Views
+AssinaturasURLs --> PlanoListView
+AssinaturasURLs --> AssinaturaAtualView
+AssinaturasURLs --> upgrade_assinatura
+AssinaturasURLs --> confirmar_pagamento
+
+' Relacionamentos Views -> Serializers
+PlanoListView --> PlanoSerializer
+AssinaturaAtualView --> AssinaturaSerializer
+upgrade_assinatura --> UpgradeAssinaturaSerializer
+confirmar_pagamento --> AssinaturaSerializer
+
+' Relacionamentos Serializers -> Models
+PlanoSerializer --> Plano
+AssinaturaSerializer --> Assinatura
+AssinaturaSerializer --> Plano
+UpgradeAssinaturaSerializer --> Plano
+
+' Relacionamentos entre Models
+Usuario ||--|| Assinatura : assinatura
+Plano ||--o{ Assinatura : assinaturas
+@enduml

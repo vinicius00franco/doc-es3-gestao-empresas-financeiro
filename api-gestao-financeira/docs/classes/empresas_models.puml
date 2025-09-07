@@ -1,0 +1,107 @@
+@startuml empresas_complete
+!define DIRECTION left to right direction
+title Empresas - Arquitetura Completa
+
+package "URLs" {
+  class EmpresasURLs {
+    +path('', EmpresaListCreateView)
+    +path('<int:pk>/', EmpresaDetailView)
+    +path('<int:pk>/definir-padrao/', definir_empresa_padrao)
+  }
+}
+
+package "Views" {
+  class EmpresaListCreateView {
+    +GET/POST /api/v1/empresas/
+    +serializer_class: EmpresaSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class EmpresaDetailView {
+    +GET/PUT/DELETE /api/v1/empresas/{id}/
+    +serializer_class: EmpresaSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class "definir_empresa_padrao" <<function>> {
+    +POST /api/v1/empresas/{id}/definir-padrao/
+    --
+    +definir_empresa_padrao(request, pk): Response
+  }
+}
+
+package "Serializers" {
+  class EmpresaSerializer {
+    +fields: [id, cnpj, razao_social, nome_fantasia, tipo_empresa, ativa, empresa_padrao, criado_em, atualizado_em]
+    +read_only_fields: [id, criado_em, atualizado_em]
+    --
+    +validate_cnpj(value): str
+    +validate_razao_social(value): str
+    +validate_nome_fantasia(value): str
+    +create(validated_data): Empresa
+  }
+  
+  class EmpresaResumoSerializer {
+    +fields: [id, razao_social, nome_fantasia, ativa]
+  }
+}
+
+package "Models" {
+  class Empresa {
+    +id: int
+    +cnpj: CharField(18)
+    +razao_social: CharField(255)
+    +nome_fantasia: CharField(255, blank=True)
+    +tipo_empresa: CharField(10, choices=TIPO_EMPRESA_CHOICES)
+    +ativa: BooleanField(default=True)
+    +empresa_padrao: BooleanField(default=False)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    --
+    +__str__(): str
+    +save(): void
+  }
+  
+  class Usuario {
+    +id: int
+    +nome: CharField(255)
+    +email: EmailField(unique=True)
+  }
+}
+
+package "Utils" {
+  class "sanitize_text_input" <<function>> {
+    --
+    +sanitize_text_input(value): str
+  }
+  
+  class "validate_cnpj_format" <<function>> {
+    --
+    +validate_cnpj_format(value): bool
+  }
+}
+
+' Relacionamentos URLs -> Views
+EmpresasURLs --> EmpresaListCreateView
+EmpresasURLs --> EmpresaDetailView
+EmpresasURLs --> definir_empresa_padrao
+
+' Relacionamentos Views -> Serializers
+EmpresaListCreateView --> EmpresaSerializer
+EmpresaDetailView --> EmpresaSerializer
+
+' Relacionamentos Serializers -> Models
+EmpresaSerializer --> Empresa
+EmpresaResumoSerializer --> Empresa
+
+' Relacionamentos Serializers -> Utils
+EmpresaSerializer --> sanitize_text_input
+EmpresaSerializer --> validate_cnpj_format
+
+' Relacionamentos entre Models
+Usuario ||--o{ Empresa : empresas
+@enduml

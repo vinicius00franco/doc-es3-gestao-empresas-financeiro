@@ -1,0 +1,24 @@
+@startuml auth_login
+!define DIRECTION left to right direction
+title Login (POST /auth/login/)
+actor Cliente
+boundary API as B
+control "login" as V
+entity "UsuarioLoginSerializer" as S
+entity "CustomRefreshToken" as T
+database DB
+
+Cliente -> B : POST /auth/login {email, password, application_id}
+B -> V : dispatch
+V -> S : validate(data)
+S -> DB : SELECT Usuario by email
+DB --> S : usuario
+S -> S : check_password()
+S -> DB : SELECT Empresa by usuario
+DB --> S : empresa
+S --> V : validated_data
+V -> T : for_user_with_tenant(usuario, application_id)
+T --> V : refresh_token
+V --> B : 200 {access_token, refresh_token, user, application_id}
+B --> Cliente : 200 OK
+@enduml

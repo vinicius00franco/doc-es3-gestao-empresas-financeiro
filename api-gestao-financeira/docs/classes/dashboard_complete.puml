@@ -1,0 +1,103 @@
+@startuml dashboard_complete
+!define DIRECTION left to right direction
+title Dashboard - Arquitetura Completa
+
+package "URLs" {
+  class DashboardURLs {
+    +path('', dashboard_resumo)
+  }
+}
+
+package "Views" {
+  class "dashboard_resumo" <<function>> {
+    +GET /dashboard/
+    +permission_classes: [IsAuthenticated]
+    --
+    +dashboard_resumo(request): Response
+    +_parse_date_safely(date_str): date
+  }
+}
+
+package "Models" {
+  class Transacao {
+    +id: int
+    +descricao: CharField(255)
+    +valor: DecimalField(12, 2)
+    +data_transacao: DateField()
+    +tipo_transacao: CharField(10)
+    +status: CharField(10)
+    +empresa: ForeignKey(Empresa)
+    +categoria: ForeignKey(Categoria)
+  }
+  
+  class Categoria {
+    +id: int
+    +nome: CharField(100)
+    +tipo_transacao: CharField(10)
+  }
+  
+  class NotaFiscal {
+    +id: int
+    +status: CharField(15)
+    +empresa: ForeignKey(Empresa)
+    +criado_em: DateTimeField()
+  }
+  
+  class Empresa {
+    +id: int
+    +razao_social: CharField(255)
+    +usuario: ForeignKey(Usuario)
+    +empresa_padrao: BooleanField()
+  }
+  
+  class Usuario {
+    +id: int
+    +nome: CharField(255)
+    +email: EmailField()
+  }
+}
+
+package "Utils" {
+  class "Sum" <<django_aggregate>> {
+    --
+    +Sum(field): Aggregate
+  }
+  
+  class "Count" <<django_aggregate>> {
+    --
+    +Count(field): Aggregate
+  }
+  
+  class "timezone" <<django_utils>> {
+    --
+    +timezone.now(): datetime
+  }
+  
+  class "timedelta" <<python>> {
+    --
+    +timedelta(days): timedelta
+  }
+}
+
+' Relacionamentos URLs -> Views
+DashboardURLs --> dashboard_resumo
+
+' Relacionamentos Views -> Models
+dashboard_resumo --> Transacao
+dashboard_resumo --> Categoria
+dashboard_resumo --> NotaFiscal
+dashboard_resumo --> Empresa
+dashboard_resumo --> Usuario
+
+' Relacionamentos Views -> Utils
+dashboard_resumo --> Sum
+dashboard_resumo --> Count
+dashboard_resumo --> timezone
+dashboard_resumo --> timedelta
+
+' Relacionamentos entre Models
+Usuario ||--o{ Empresa : empresas
+Empresa ||--o{ Transacao : transacoes
+Empresa ||--o{ NotaFiscal : notas_fiscais
+Categoria ||--o{ Transacao : categoria
+@enduml

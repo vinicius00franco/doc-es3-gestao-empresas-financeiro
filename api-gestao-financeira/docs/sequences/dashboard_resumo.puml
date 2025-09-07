@@ -1,0 +1,23 @@
+@startuml dashboard_resumo
+!define DIRECTION left to right direction
+title Dashboard Resumo (GET /dashboard/)
+actor Cliente
+boundary API as B
+control "dashboard_resumo" as V
+database DB
+
+Cliente -> B : GET /api/v1/dashboard/
+B -> V : get()
+V -> DB : SELECT SUM(valor) FROM Transacao WHERE tipo='entrada' AND mes_atual
+DB --> V : total_entradas
+V -> DB : SELECT SUM(valor) FROM Transacao WHERE tipo='saida' AND mes_atual
+DB --> V : total_saidas
+V -> DB : SELECT COUNT(*) FROM Transacao WHERE mes_atual
+DB --> V : total_transacoes
+V -> DB : SELECT COUNT(*) FROM Empresa WHERE usuario=current_user
+DB --> V : total_empresas
+V -> V : calculate_saldo() = entradas - saidas
+V -> V : calculate_percentual_crescimento()
+V --> B : 200 {entradas, saidas, saldo, transacoes, empresas, crescimento}
+B --> Cliente : 200 OK
+@enduml

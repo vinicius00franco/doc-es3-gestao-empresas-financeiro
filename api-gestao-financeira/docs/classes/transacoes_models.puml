@@ -1,0 +1,239 @@
+@startuml transacoes_complete
+!define DIRECTION left to right direction
+title Transações - Arquitetura Completa
+
+package "URLs" {
+  class TransacoesURLs {
+    +path('transacoes/', TransacaoListCreateView)
+    +path('transacoes/<int:pk>/', TransacaoDetailView)
+    +path('categorias/', CategoriaListCreateView)
+    +path('categorias/<int:pk>/', CategoriaDetailView)
+    +path('fornecedores/', FornecedorListCreateView)
+    +path('fornecedores/<int:pk>/', FornecedorDetailView)
+  }
+}
+
+package "Views" {
+  class TransacaoListCreateView {
+    +GET/POST /transacoes/
+    +serializer_class: TransacaoSerializer
+    +filter_backends: [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    +filterset_fields: [tipo_transacao, status, categoria, data_transacao]
+    +search_fields: [descricao, observacoes, numero_documento]
+    +ordering_fields: [data_transacao, valor, criado_em]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class TransacaoDetailView {
+    +GET/PUT/DELETE /transacoes/{id}/
+    +serializer_class: TransacaoSerializer
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class CategoriaListCreateView {
+    +GET/POST /categorias/
+    +serializer_class: CategoriaSerializer
+    +filter_backends: [SearchFilter]
+    +search_fields: [nome, descricao]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class CategoriaDetailView {
+    +GET/PUT/DELETE /categorias/{id}/
+    +serializer_class: CategoriaSerializer
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class FornecedorListCreateView {
+    +GET/POST /fornecedores/
+    +serializer_class: FornecedorSerializer
+    +filter_backends: [SearchFilter]
+    +search_fields: [razao_social, nome_fantasia, cnpj]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class FornecedorDetailView {
+    +GET/PUT/DELETE /fornecedores/{id}/
+    +serializer_class: FornecedorSerializer
+    --
+    +get_queryset(): QuerySet
+  }
+}
+
+package "Serializers" {
+  class TransacaoSerializer {
+    +categoria_nome: CharField(source=categoria.nome, read_only=True)
+    +fornecedor_nome: CharField(source=fornecedor.razao_social, read_only=True)
+    +valor_formatado: CharField(read_only=True)
+    +fields: [id, descricao, valor, valor_formatado, data_transacao, tipo_transacao, status, observacoes, numero_documento, forma_pagamento, recorrente, categoria, categoria_nome, fornecedor, fornecedor_nome, criado_em, atualizado_em]
+    --
+    +create(validated_data): Transacao
+    +validate(attrs): dict
+    +validate_descricao(value): str
+    +validate_observacoes(value): str
+    +validate_numero_documento(value): str
+  }
+  
+  class CategoriaSerializer {
+    +fields: [id, nome, descricao, cor, icone, tipo_transacao, ativa, categoria_padrao]
+    +read_only_fields: [id]
+    --
+    +create(validated_data): Categoria
+  }
+  
+  class FornecedorSerializer {
+    +total_transacoes: SerializerMethodField()
+    +fields: [id, cnpj, razao_social, nome_fantasia, email, telefone, endereco, criado_automaticamente, ativo, total_transacoes]
+    +read_only_fields: [id, criado_automaticamente, total_transacoes]
+    --
+    +get_total_transacoes(obj): int
+    +validate_cnpj(value): str
+    +validate_razao_social(value): str
+    +validate_nome_fantasia(value): str
+    +validate_endereco(value): str
+  }
+  
+  class TransacaoResumoSerializer {
+    +categoria_nome: CharField(source=categoria.nome, read_only=True)
+    +fields: [id, descricao, valor, data_transacao, tipo_transacao, categoria_nome]
+  }
+}
+
+package "Models" {
+  class Transacao {
+    +id: int
+    +descricao: CharField(255)
+    +valor: DecimalField(12, 2)
+    +data_transacao: DateField()
+    +tipo_transacao: CharField(10, choices=TIPO_TRANSACAO_CHOICES)
+    +status: CharField(10, choices=STATUS_CHOICES)
+    +observacoes: TextField(blank=True)
+    +numero_documento: CharField(100, blank=True)
+    +forma_pagamento: CharField(20, choices=FORMA_PAGAMENTO_CHOICES)
+    +recorrente: BooleanField(default=False)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    +tenant_id: CharField (from TenantMixin)
+    --
+    +__str__(): str
+    +valor_formatado(): str
+  }
+  
+  class Categoria {
+    +id: int
+    +nome: CharField(100)
+    +descricao: TextField(blank=True)
+    +cor: CharField(7, blank=True)
+    +icone: CharField(50, blank=True)
+    +tipo_transacao: CharField(10, choices=TIPO_TRANSACAO_CHOICES)
+    +ativa: BooleanField(default=True)
+    +categoria_padrao: BooleanField(default=False)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +tenant_id: CharField (from TenantMixin)
+    --
+    +__str__(): str
+  }
+  
+  class Fornecedor {
+    +id: int
+    +cnpj: CharField(18)
+    +razao_social: CharField(255)
+    +nome_fantasia: CharField(255, blank=True)
+    +email: EmailField(blank=True)
+    +telefone: CharField(20, blank=True)
+    +endereco: TextField(blank=True)
+    +criado_automaticamente: BooleanField(default=False)
+    +ativo: BooleanField(default=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    +tenant_id: CharField (from TenantMixin)
+    --
+    +__str__(): str
+  }
+  
+  class Empresa {
+    +id: int
+    +razao_social: CharField(255)
+  }
+}
+
+package "Mixins" {
+  class TenantMixin {
+    +tenant_id: CharField
+    --
+    +get_queryset(): QuerySet
+    +save(): void
+  }
+  
+  class TenantViewMixin {
+    --
+    +get_queryset(): QuerySet
+    +get_tenant_id(): str
+    +filter_by_tenant(): QuerySet
+  }
+}
+
+package "Utils" {
+  class "sanitize_text_input" <<function>> {
+    --
+    +sanitize_text_input(value): str
+  }
+  
+  class "validate_cnpj_format" <<function>> {
+    --
+    +validate_cnpj_format(value): bool
+  }
+}
+
+' Relacionamentos URLs -> Views
+TransacoesURLs --> TransacaoListCreateView
+TransacoesURLs --> TransacaoDetailView
+TransacoesURLs --> CategoriaListCreateView
+TransacoesURLs --> CategoriaDetailView
+TransacoesURLs --> FornecedorListCreateView
+TransacoesURLs --> FornecedorDetailView
+
+' Relacionamentos Views -> Serializers
+TransacaoListCreateView --> TransacaoSerializer
+TransacaoDetailView --> TransacaoSerializer
+CategoriaListCreateView --> CategoriaSerializer
+CategoriaDetailView --> CategoriaSerializer
+FornecedorListCreateView --> FornecedorSerializer
+FornecedorDetailView --> FornecedorSerializer
+
+' Relacionamentos Views -> Mixins
+TransacaoListCreateView --> TenantViewMixin
+TransacaoDetailView --> TenantViewMixin
+CategoriaListCreateView --> TenantViewMixin
+CategoriaDetailView --> TenantViewMixin
+FornecedorListCreateView --> TenantViewMixin
+FornecedorDetailView --> TenantViewMixin
+
+' Relacionamentos Serializers -> Models
+TransacaoSerializer --> Transacao
+CategoriaSerializer --> Categoria
+FornecedorSerializer --> Fornecedor
+TransacaoResumoSerializer --> Transacao
+
+' Relacionamentos Serializers -> Utils
+TransacaoSerializer --> sanitize_text_input
+FornecedorSerializer --> sanitize_text_input
+FornecedorSerializer --> validate_cnpj_format
+
+' Relacionamentos Models -> Mixins
+TenantMixin <|-- Transacao
+TenantMixin <|-- Categoria
+TenantMixin <|-- Fornecedor
+
+' Relacionamentos entre Models
+Empresa ||--o{ Transacao : transacoes
+Empresa ||--o{ Categoria : categorias
+Empresa ||--o{ Fornecedor : fornecedores
+Categoria ||--o{ Transacao : categoria
+Fornecedor ||--o{ Transacao : fornecedor
+@enduml

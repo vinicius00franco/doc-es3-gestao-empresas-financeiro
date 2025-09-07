@@ -1,0 +1,168 @@
+@startuml usuarios_complete
+!define DIRECTION left to right direction
+title Usuários - Arquitetura Completa
+
+package "URLs" {
+  class UsuariosURLs {
+    +path('auth/register/', registro)
+    +path('auth/login/', login)
+    +path('auth/refresh/', refresh_token)
+    +path('users/profile/', PerfilView)
+    +path('users/configuracao/', ConfiguracaoView)
+  }
+}
+
+package "Views" {
+  class "registro" <<function>> {
+    +POST /auth/register/
+    +permission_classes: [AllowAny]
+    --
+    +registro(request): Response
+  }
+  
+  class "login" <<function>> {
+    +POST /auth/login/
+    +permission_classes: [AllowAny]
+    +throttle_classes: [LoginRateThrottle]
+    --
+    +login(request): Response
+  }
+  
+  class "refresh_token" <<function>> {
+    +POST /auth/refresh/
+    +permission_classes: [AllowAny]
+    --
+    +refresh_token(request): Response
+  }
+  
+  class PerfilView {
+    +GET/PUT /users/profile/
+    +serializer_class: UsuarioSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_object(): Usuario
+  }
+  
+  class ConfiguracaoView {
+    +GET/PUT /users/configuracao/
+    +serializer_class: ConfiguracaoUsuarioSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_object(): ConfiguracaoUsuario
+  }
+}
+
+package "Serializers" {
+  class UsuarioRegistroSerializer {
+    +senha: CharField(write_only=True)
+    +senha_confirmacao: CharField(write_only=True)
+    +fields: [nome, email, senha, senha_confirmacao]
+    --
+    +validate(attrs): dict
+    +create(validated_data): Usuario
+  }
+  
+  class UsuarioLoginSerializer {
+    +email: EmailField()
+    +senha: CharField()
+    +application_id: CharField(required=True)
+    --
+    +validate(attrs): dict
+  }
+  
+  class UsuarioSerializer {
+    +fields: [id, nome, email, criado_em, atualizado_em]
+    +read_only_fields: [id, criado_em, atualizado_em]
+  }
+  
+  class ConfiguracaoUsuarioSerializer {
+    +fields: [tema, moeda, formato_data, fuso_horario, notificacoes_email, notificacoes_push, backup_automatico]
+  }
+}
+
+package "Models" {
+  class Usuario {
+    +id: int
+    +nome: CharField(255)
+    +email: EmailField(unique=True)
+    +ativo: BooleanField(default=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    +username: CharField (inherited)
+    +password: CharField (inherited)
+    --
+    +__str__(): str
+    +save(): void
+  }
+  
+  class ConfiguracaoUsuario {
+    +id: int
+    +tema: CharField(10, choices=TEMA_CHOICES)
+    +moeda: CharField(3, default='BRL')
+    +formato_data: CharField(10, choices=FORMATO_DATA_CHOICES)
+    +fuso_horario: CharField(50, default='America/Sao_Paulo')
+    +notificacoes_email: BooleanField(default=True)
+    +notificacoes_push: BooleanField(default=True)
+    +backup_automatico: BooleanField(default=False)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+  }
+  
+  class TokenRecuperacao {
+    +id: int
+    +token: CharField(255, unique=True)
+    +usado: BooleanField(default=False)
+    +expira_em: DateTimeField()
+    +criado_em: DateTimeField(auto_now_add=True)
+  }
+  
+  class LogAtividade {
+    +id: int
+    +acao: CharField(100)
+    +detalhes: JSONField(null=True, blank=True)
+    +ip_address: GenericIPAddressField(null=True)
+    +user_agent: TextField(null=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+  }
+}
+
+package "Utils" {
+  class CustomRefreshToken {
+    --
+    +for_user_with_tenant(user, application_id): RefreshToken
+  }
+  
+  class LoginRateThrottle {
+    +scope: 'login'
+  }
+}
+
+' Relacionamentos URLs -> Views
+UsuariosURLs --> registro
+UsuariosURLs --> login
+UsuariosURLs --> refresh_token
+UsuariosURLs --> PerfilView
+UsuariosURLs --> ConfiguracaoView
+
+' Relacionamentos Views -> Serializers
+registro --> UsuarioRegistroSerializer
+login --> UsuarioLoginSerializer
+PerfilView --> UsuarioSerializer
+ConfiguracaoView --> ConfiguracaoUsuarioSerializer
+
+' Relacionamentos Views -> Utils
+login --> CustomRefreshToken
+login --> LoginRateThrottle
+
+' Relacionamentos Serializers -> Models
+UsuarioRegistroSerializer --> Usuario
+UsuarioRegistroSerializer --> ConfiguracaoUsuario
+UsuarioLoginSerializer --> Usuario
+UsuarioSerializer --> Usuario
+ConfiguracaoUsuarioSerializer --> ConfiguracaoUsuario
+
+' Relacionamentos entre Models
+Usuario ||--|| ConfiguracaoUsuario : configuracao
+Usuario ||--o{ TokenRecuperacao : tokens
+Usuario ||--o{ LogAtividade : logs
+@enduml

@@ -1,0 +1,20 @@
+@startuml auth_register
+!define DIRECTION left to right direction
+title Registro de Usuário (POST /auth/register/)
+actor Cliente
+boundary API as B
+control "registro" as V
+entity "UsuarioRegistroSerializer" as S
+database DB
+
+Cliente -> B : POST /auth/register {nome, email, password}
+B -> V : dispatch
+V -> S : validate(data)
+S -> S : check_email_unique()
+S -> S : validate_password()
+S --> V : validated_data
+V -> DB : CREATE Usuario
+DB --> V : usuario
+V --> B : 201 {id, nome, email, criado_em}
+B --> Cliente : 201 Created
+@enduml

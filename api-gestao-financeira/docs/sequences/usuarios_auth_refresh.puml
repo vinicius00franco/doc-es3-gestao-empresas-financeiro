@@ -1,0 +1,14 @@
+@startuml usuarios_auth_refresh
+title Refresh Token (POST /auth/refresh/)
+actor Cliente
+boundary API as B
+control "View refresh_token" as V
+control "RefreshToken" as RT
+
+Cliente -> B : POST /auth/refresh {refresh_token}
+B -> V : dispatch
+V -> RT : validar(refresh)
+RT --> V : válido? access
+V --> B : 200 {access_token}|401 erro
+B --> Cliente : resposta
+@enduml

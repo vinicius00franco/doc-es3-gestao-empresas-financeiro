@@ -1,0 +1,31 @@
+@startuml notas_fiscais_upload
+!define DIRECTION left to right direction
+title Upload Nota Fiscal (POST /invoices/upload/)
+actor Cliente
+boundary API as B
+control "upload_nota_fiscal" as V
+entity "NotaFiscalSerializer" as S
+queue "Celery Task" as C
+database DB
+
+Cliente -> B : POST /api/v1/invoices/upload/ {file}
+B -> V : post()
+V -> S : validate(file)
+S -> S : validate_file_type()
+S -> S : validate_file_size()
+S --> V : validated_data
+V -> DB : CREATE NotaFiscal status='uploaded'
+DB --> V : nota_fiscal
+V -> C : process_nota_fiscal.delay(nota_fiscal.id)
+C --> V : task_id
+V --> B : 201 {id, status: 'uploaded', task_id}
+B --> Cliente : 201 Created
+
+note right of C
+  Processamento assíncrono:
+  1. Extrai dados do XML/PDF
+  2. Cria/atualiza Fornecedor
+  3. Cria Transação
+  4. Atualiza status para 'processed'
+end note
+@enduml

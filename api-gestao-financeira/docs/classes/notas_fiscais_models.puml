@@ -1,0 +1,145 @@
+@startuml notas_fiscais_complete
+!define DIRECTION left to right direction
+title Notas Fiscais - Arquitetura Completa
+
+package "URLs" {
+  class NotasFiscaisURLs {
+    +path('invoices/upload/', upload_nota_fiscal)
+    +path('invoices/<int:pk>/status/', NotaFiscalStatusView)
+    +path('invoices/', NotaFiscalListView)
+  }
+}
+
+package "Views" {
+  class "upload_nota_fiscal" <<function>> {
+    +POST /invoices/upload/
+    --
+    +upload_nota_fiscal(request): Response
+  }
+  
+  class NotaFiscalStatusView {
+    +GET /invoices/{id}/status/
+    +serializer_class: NotaFiscalStatusSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class NotaFiscalListView {
+    +GET /invoices/
+    +serializer_class: NotaFiscalSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_queryset(): QuerySet
+  }
+}
+
+package "Serializers" {
+  class NotaFiscalUploadSerializer {
+    +file: FileField(write_only=True)
+    +empresa_id: IntegerField(write_only=True)
+    +fields: [file, empresa_id]
+    --
+    +validate_file(value): File
+    +validate_empresa_id(value): int
+    +create(validated_data): NotaFiscal
+  }
+  
+  class NotaFiscalSerializer {
+    +fornecedor: FornecedorSerializer(read_only=True)
+    +fields: [id, arquivo_original, tipo_arquivo, status, chave_acesso, cnpj_emissor, razao_social_emissor, valor_total, data_emissao, fornecedor, transacao, erro_processamento, criado_em, processado_em]
+    +read_only_fields: [id, chave_acesso, cnpj_emissor, razao_social_emissor, valor_total, data_emissao, dados_extraidos, criado_em, processado_em]
+  }
+  
+  class NotaFiscalStatusSerializer {
+    +fields: [id, status, dados_extraidos, transacao, erro_processamento, processado_em]
+  }
+}
+
+package "Models" {
+  class NotaFiscal {
+    +id: int
+    +arquivo_original: CharField(255)
+    +caminho_arquivo: FileField(upload_to='notas_fiscais/%Y/%m/')
+    +tipo_arquivo: CharField(5, choices=TIPO_ARQUIVO_CHOICES)
+    +status: CharField(15, choices=STATUS_CHOICES)
+    +chave_acesso: CharField(44, unique=True, null=True)
+    +cnpj_emissor: CharField(18, blank=True)
+    +razao_social_emissor: CharField(255, blank=True)
+    +valor_total: DecimalField(12, 2, null=True)
+    +data_emissao: DateField(null=True)
+    +dados_extraidos: JSONField(null=True)
+    +erro_processamento: TextField(blank=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +processado_em: DateTimeField(null=True)
+    --
+    +__str__(): str
+  }
+  
+  class Empresa {
+    +id: int
+    +razao_social: CharField(255)
+  }
+  
+  class Fornecedor {
+    +id: int
+    +razao_social: CharField(255)
+    +cnpj: CharField(18)
+  }
+  
+  class Transacao {
+    +id: int
+    +descricao: CharField(255)
+    +valor: DecimalField(12, 2)
+  }
+  
+  class Categoria {
+    +id: int
+    +nome: CharField(100)
+    +tipo_transacao: CharField(10)
+  }
+}
+
+package "Tasks" {
+  class "processar_nota_fiscal" <<celery_task>> {
+    --
+    +processar_nota_fiscal.delay(nota_fiscal_id): AsyncResult
+  }
+  
+  class "processar_nota_fiscal_mock" <<function>> {
+    --
+    +processar_nota_fiscal_mock(nota_fiscal): void
+  }
+}
+
+' Relacionamentos URLs -> Views
+NotasFiscaisURLs --> upload_nota_fiscal
+NotasFiscaisURLs --> NotaFiscalStatusView
+NotasFiscaisURLs --> NotaFiscalListView
+
+' Relacionamentos Views -> Serializers
+upload_nota_fiscal --> NotaFiscalUploadSerializer
+NotaFiscalStatusView --> NotaFiscalStatusSerializer
+NotaFiscalListView --> NotaFiscalSerializer
+
+' Relacionamentos Views -> Tasks
+upload_nota_fiscal --> processar_nota_fiscal
+
+' Relacionamentos Serializers -> Models
+NotaFiscalUploadSerializer --> NotaFiscal
+NotaFiscalUploadSerializer --> Empresa
+NotaFiscalSerializer --> NotaFiscal
+NotaFiscalSerializer --> Fornecedor
+NotaFiscalStatusSerializer --> NotaFiscal
+
+' Relacionamentos Tasks -> Models
+processar_nota_fiscal_mock --> NotaFiscal
+processar_nota_fiscal_mock --> Fornecedor
+processar_nota_fiscal_mock --> Transacao
+processar_nota_fiscal_mock --> Categoria
+
+' Relacionamentos entre Models
+Empresa ||--o{ NotaFiscal : notas_fiscais
+Fornecedor ||--o{ NotaFiscal : notas_fiscais
+Transacao ||--o| NotaFiscal : nota_fiscal
+@enduml

@@ -1,0 +1,21 @@
+@startuml auth_refresh
+!define DIRECTION left to right direction
+title Refresh Token (POST /auth/refresh/)
+actor Cliente
+boundary API as B
+control "refresh_token" as V
+entity "RefreshToken" as T
+
+Cliente -> B : POST /auth/refresh {refresh_token}
+B -> V : dispatch
+V -> T : RefreshToken(refresh_token)
+T -> T : validate_token()
+T --> V : access_token
+V --> B : 200 {access_token}
+B --> Cliente : 200 OK
+
+note right of V
+  Em caso de token inválido:
+  V --> B : 401 {error: "Token inválido"}
+end note
+@enduml

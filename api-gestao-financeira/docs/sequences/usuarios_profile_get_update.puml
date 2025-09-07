@@ -1,0 +1,21 @@
+@startuml usuarios_profile_get_update
+title Perfil (GET/PUT /users/profile/)
+actor Cliente
+boundary API as B
+control "PerfilView" as V
+database DB
+
+Cliente -> B : GET /users/profile (Authorization)
+B -> V : dispatch
+V -> DB : SELECT usuario by token
+DB --> V : usuario
+V --> B : 200 perfil JSON
+B --> Cliente : 200
+
+Cliente -> B : PUT /users/profile {dados}
+B -> V : dispatch
+V -> DB : UPDATE usuario set campos
+DB --> V : usuario_atualizado
+V --> B : 200 JSON
+B --> Cliente : 200
+@enduml

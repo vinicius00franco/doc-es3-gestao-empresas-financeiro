@@ -1,0 +1,64 @@
+@startuml categorias_crud
+!define DIRECTION left to right direction
+title Categorias CRUD (GET/POST/PUT/DELETE /categorias/)
+actor Cliente
+boundary API as B
+control "CategoriaListCreateView" as LV
+control "CategoriaDetailView" as DV
+entity "CategoriaSerializer" as S
+entity "TenantViewMixin" as M
+database DB
+
+== GET List ==
+Cliente -> B : GET /categorias/?tipo_transacao=entrada
+B -> LV : get()
+LV -> M : get_queryset()
+M -> DB : SELECT Categoria by tenant WHERE ativa=True
+DB --> M : categorias
+M --> LV : queryset
+LV -> LV : filter_by_tipo()
+LV -> S : serialize(categorias)
+S --> LV : serialized_data
+LV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== POST Create ==
+Cliente -> B : POST /categorias/ {nome, tipo_transacao, cor}
+B -> LV : post()
+LV -> S : validate(data)
+S --> LV : validated_data
+LV -> DB : CREATE Categoria
+DB --> LV : categoria
+LV -> S : serialize(categoria)
+S --> LV : serialized_data
+LV --> B : 201 JSON
+B --> Cliente : 201 Created
+
+== PUT Update ==
+Cliente -> B : PUT /categorias/{id}/ {data}
+B -> DV : put()
+DV -> M : get_object()
+M -> DB : SELECT Categoria by id and tenant
+DB --> M : categoria
+M --> DV : object
+DV -> S : validate(data)
+S --> DV : validated_data
+DV -> DB : UPDATE Categoria
+DB --> DV : categoria_atualizada
+DV -> S : serialize(categoria)
+S --> DV : serialized_data
+DV --> B : 200 JSON
+B --> Cliente : 200 OK
+
+== DELETE ==
+Cliente -> B : DELETE /categorias/{id}/
+B -> DV : delete()
+DV -> M : get_object()
+M -> DB : SELECT Categoria by id and tenant
+DB --> M : categoria
+M --> DV : object
+DV -> DB : DELETE Categoria
+DB --> DV : success
+DV --> B : 204 No Content
+B --> Cliente : 204 No Content
+@enduml

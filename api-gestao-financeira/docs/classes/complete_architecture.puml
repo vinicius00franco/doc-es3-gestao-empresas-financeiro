@@ -1,0 +1,564 @@
+@startuml complete_architecture
+!define DIRECTION left to right direction
+title Arquitetura Completa - API Gestão Financeira
+
+package "Controllers/Views" {
+  
+  class "registro" <<function>> {
+    +POST /auth/register/
+    --
+    +registro(request): Response
+  }
+  
+  class "login" <<function>> {
+    +POST /auth/login/
+    --
+    +login(request): Response
+  }
+  
+  class "refresh_token" <<function>> {
+    +POST /auth/refresh/
+    --
+    +refresh_token(request): Response
+  }
+  
+  class PerfilView {
+    +GET/PUT /users/profile/
+    +serializer_class: UsuarioSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_object(): Usuario
+  }
+  
+  class ConfiguracaoView {
+    +GET/PUT /users/configuracao/
+    +serializer_class: ConfiguracaoUsuarioSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_object(): ConfiguracaoUsuario
+  }
+  
+  class TransacaoListCreateView {
+    +GET/POST /transacoes/
+    +serializer_class: TransacaoSerializer
+    +filter_backends: [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    +filterset_fields: [tipo_transacao, status, categoria, data_transacao]
+    +search_fields: [descricao, observacoes, numero_documento]
+    +ordering_fields: [data_transacao, valor, criado_em]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class TransacaoDetailView {
+    +GET/PUT/DELETE /transacoes/{id}/
+    +serializer_class: TransacaoSerializer
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class CategoriaListCreateView {
+    +GET/POST /categorias/
+    +serializer_class: CategoriaSerializer
+    +filter_backends: [SearchFilter]
+    +search_fields: [nome, descricao]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class CategoriaDetailView {
+    +GET/PUT/DELETE /categorias/{id}/
+    +serializer_class: CategoriaSerializer
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class FornecedorListCreateView {
+    +GET/POST /fornecedores/
+    +serializer_class: FornecedorSerializer
+    +filter_backends: [SearchFilter]
+    +search_fields: [razao_social, nome_fantasia, cnpj]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class FornecedorDetailView {
+    +GET/PUT/DELETE /fornecedores/{id}/
+    +serializer_class: FornecedorSerializer
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class EmpresaListCreateView {
+    +GET/POST /api/v1/empresas/
+    +serializer_class: EmpresaSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class EmpresaDetailView {
+    +GET/PUT/DELETE /api/v1/empresas/{id}/
+    +serializer_class: EmpresaSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class "definir_empresa_padrao" <<function>> {
+    +POST /api/v1/empresas/{id}/definir-padrao/
+    --
+    +definir_empresa_padrao(request, pk): Response
+  }
+  
+  class PlanoListView {
+    +GET /planos/
+    +queryset: Plano.objects.filter(ativo=True)
+    +serializer_class: PlanoSerializer
+    +permission_classes: [AllowAny]
+  }
+  
+  class AssinaturaAtualView {
+    +GET /assinaturas/atual/
+    +serializer_class: AssinaturaSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_object(): Assinatura
+  }
+  
+  class "upgrade_assinatura" <<function>> {
+    +POST /assinaturas/upgrade/
+    --
+    +upgrade_assinatura(request): Response
+  }
+  
+  class "confirmar_pagamento" <<function>> {
+    +POST /assinaturas/confirmar-pagamento/
+    --
+    +confirmar_pagamento(request): Response
+  }
+  
+  class "dashboard_resumo" <<function>> {
+    +GET /dashboard/
+    --
+    +dashboard_resumo(request): Response
+  }
+  
+  class "upload_nota_fiscal" <<function>> {
+    +POST /invoices/upload/
+    --
+    +upload_nota_fiscal(request): Response
+  }
+  
+  class NotaFiscalStatusView {
+    +GET /invoices/{id}/status/
+    +serializer_class: NotaFiscalStatusSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_queryset(): QuerySet
+  }
+  
+  class NotaFiscalListView {
+    +GET /invoices/
+    +serializer_class: NotaFiscalSerializer
+    +permission_classes: [IsAuthenticated]
+    --
+    +get_queryset(): QuerySet
+  }
+}
+
+package "Serializers" {
+  
+  class UsuarioRegistroSerializer {
+    +senha: CharField(write_only=True)
+    +senha_confirmacao: CharField(write_only=True)
+    +fields: [nome, email, senha, senha_confirmacao]
+    --
+    +validate(attrs): dict
+    +create(validated_data): Usuario
+  }
+  
+  class UsuarioLoginSerializer {
+    +email: EmailField()
+    +senha: CharField()
+    +application_id: CharField(required=True)
+    --
+    +validate(attrs): dict
+  }
+  
+  class UsuarioSerializer {
+    +fields: [id, nome, email, criado_em, atualizado_em]
+    +read_only_fields: [id, criado_em, atualizado_em]
+  }
+  
+  class ConfiguracaoUsuarioSerializer {
+    +fields: [tema, moeda, formato_data, fuso_horario, notificacoes_email, notificacoes_push, backup_automatico]
+  }
+  
+  class TransacaoSerializer {
+    +categoria_nome: CharField(source=categoria.nome, read_only=True)
+    +fornecedor_nome: CharField(source=fornecedor.razao_social, read_only=True)
+    +valor_formatado: CharField(read_only=True)
+    +fields: [id, descricao, valor, valor_formatado, data_transacao, tipo_transacao, status, observacoes, numero_documento, forma_pagamento, recorrente, categoria, categoria_nome, fornecedor, fornecedor_nome, criado_em, atualizado_em]
+    --
+    +create(validated_data): Transacao
+    +validate(attrs): dict
+    +validate_descricao(value): str
+    +validate_observacoes(value): str
+    +validate_numero_documento(value): str
+  }
+  
+  class CategoriaSerializer {
+    +fields: [id, nome, descricao, cor, icone, tipo_transacao, ativa, categoria_padrao]
+    +read_only_fields: [id]
+    --
+    +create(validated_data): Categoria
+  }
+  
+  class FornecedorSerializer {
+    +total_transacoes: SerializerMethodField()
+    +fields: [id, cnpj, razao_social, nome_fantasia, email, telefone, endereco, criado_automaticamente, ativo, total_transacoes]
+    +read_only_fields: [id, criado_automaticamente, total_transacoes]
+    --
+    +get_total_transacoes(obj): int
+    +validate_cnpj(value): str
+    +validate_razao_social(value): str
+    +validate_nome_fantasia(value): str
+    +validate_endereco(value): str
+  }
+  
+  class EmpresaSerializer {
+    +fields: [id, cnpj, razao_social, nome_fantasia, tipo_empresa, ativa, empresa_padrao, criado_em, atualizado_em]
+    +read_only_fields: [id, criado_em, atualizado_em]
+    --
+    +validate_cnpj(value): str
+    +validate_razao_social(value): str
+    +validate_nome_fantasia(value): str
+    +create(validated_data): Empresa
+  }
+  
+  class PlanoSerializer {
+    +eh_gratuito: BooleanField(read_only=True)
+    +fields: [id, nome, descricao, preco, eh_gratuito, limite_transacoes, limite_empresas, permite_relatorios, permite_exportacao, permite_notas_fiscais]
+  }
+  
+  class AssinaturaSerializer {
+    +plano: PlanoSerializer(read_only=True)
+    +pode_criar_transacao: BooleanField(read_only=True)
+    +pode_criar_empresa: BooleanField(read_only=True)
+    +fields: [id, plano, status, data_inicio, data_fim, valor_pago, pode_criar_transacao, pode_criar_empresa, criado_em, atualizado_em]
+    +read_only_fields: [id, data_inicio, data_fim, valor_pago, criado_em, atualizado_em]
+  }
+  
+  class UpgradeAssinaturaSerializer {
+    +plano_id: IntegerField()
+    --
+    +validate_plano_id(value): int
+  }
+  
+  class NotaFiscalUploadSerializer {
+    +file: FileField(write_only=True)
+    +empresa_id: IntegerField(write_only=True)
+    +fields: [file, empresa_id]
+    --
+    +validate_file(value): File
+    +validate_empresa_id(value): int
+    +create(validated_data): NotaFiscal
+  }
+  
+  class NotaFiscalSerializer {
+    +fornecedor: FornecedorSerializer(read_only=True)
+    +fields: [id, arquivo_original, tipo_arquivo, status, chave_acesso, cnpj_emissor, razao_social_emissor, valor_total, data_emissao, fornecedor, transacao, erro_processamento, criado_em, processado_em]
+    +read_only_fields: [id, chave_acesso, cnpj_emissor, razao_social_emissor, valor_total, data_emissao, dados_extraidos, criado_em, processado_em]
+  }
+  
+  class NotaFiscalStatusSerializer {
+    +fields: [id, status, dados_extraidos, transacao, erro_processamento, processado_em]
+  }
+}
+
+package "Models" {
+  
+  class Usuario {
+    +id: int
+    +nome: CharField(255)
+    +email: EmailField(unique=True)
+    +ativo: BooleanField(default=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    +username: CharField (inherited)
+    +password: CharField (inherited)
+    --
+    +__str__(): str
+    +save(): void
+  }
+  
+  class ConfiguracaoUsuario {
+    +id: int
+    +tema: CharField(10, choices=TEMA_CHOICES)
+    +moeda: CharField(3, default='BRL')
+    +formato_data: CharField(10, choices=FORMATO_DATA_CHOICES)
+    +fuso_horario: CharField(50, default='America/Sao_Paulo')
+    +notificacoes_email: BooleanField(default=True)
+    +notificacoes_push: BooleanField(default=True)
+    +backup_automatico: BooleanField(default=False)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+  }
+  
+  class Empresa {
+    +id: int
+    +cnpj: CharField(18)
+    +razao_social: CharField(255)
+    +nome_fantasia: CharField(255, blank=True)
+    +tipo_empresa: CharField(10, choices=TIPO_EMPRESA_CHOICES)
+    +ativa: BooleanField(default=True)
+    +empresa_padrao: BooleanField(default=False)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    --
+    +__str__(): str
+    +save(): void
+  }
+  
+  class Transacao {
+    +id: int
+    +descricao: CharField(255)
+    +valor: DecimalField(12, 2)
+    +data_transacao: DateField()
+    +tipo_transacao: CharField(10, choices=TIPO_TRANSACAO_CHOICES)
+    +status: CharField(10, choices=STATUS_CHOICES)
+    +observacoes: TextField(blank=True)
+    +numero_documento: CharField(100, blank=True)
+    +forma_pagamento: CharField(20, choices=FORMA_PAGAMENTO_CHOICES)
+    +recorrente: BooleanField(default=False)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    +tenant_id: CharField (from TenantMixin)
+    --
+    +__str__(): str
+    +valor_formatado(): str
+  }
+  
+  class Categoria {
+    +id: int
+    +nome: CharField(100)
+    +descricao: TextField(blank=True)
+    +cor: CharField(7, blank=True)
+    +icone: CharField(50, blank=True)
+    +tipo_transacao: CharField(10, choices=TIPO_TRANSACAO_CHOICES)
+    +ativa: BooleanField(default=True)
+    +categoria_padrao: BooleanField(default=False)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +tenant_id: CharField (from TenantMixin)
+    --
+    +__str__(): str
+  }
+  
+  class Fornecedor {
+    +id: int
+    +cnpj: CharField(18)
+    +razao_social: CharField(255)
+    +nome_fantasia: CharField(255, blank=True)
+    +email: EmailField(blank=True)
+    +telefone: CharField(20, blank=True)
+    +endereco: TextField(blank=True)
+    +criado_automaticamente: BooleanField(default=False)
+    +ativo: BooleanField(default=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    +tenant_id: CharField (from TenantMixin)
+    --
+    +__str__(): str
+  }
+  
+  class Plano {
+    +id: int
+    +nome: CharField(50, unique=True)
+    +descricao: TextField(blank=True)
+    +preco: DecimalField(10, 2)
+    +limite_transacoes: IntegerField(null=True, blank=True)
+    +limite_empresas: IntegerField(default=1)
+    +permite_relatorios: BooleanField(default=False)
+    +permite_exportacao: BooleanField(default=False)
+    +permite_notas_fiscais: BooleanField(default=False)
+    +ativo: BooleanField(default=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    --
+    +__str__(): str
+    +eh_gratuito(): bool
+  }
+  
+  class Assinatura {
+    +id: int
+    +status: CharField(15, choices=STATUS_CHOICES)
+    +data_inicio: DateField()
+    +data_fim: DateField(null=True, blank=True)
+    +valor_pago: DecimalField(10, 2, null=True)
+    +gateway_pagamento: CharField(50, blank=True)
+    +id_transacao_gateway: CharField(255, blank=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +atualizado_em: DateTimeField(auto_now=True)
+    --
+    +__str__(): str
+    +pode_criar_transacao(): bool
+    +pode_criar_empresa(): bool
+  }
+  
+  class NotaFiscal {
+    +id: int
+    +arquivo_original: CharField(255)
+    +caminho_arquivo: FileField(upload_to='notas_fiscais/%Y/%m/')
+    +tipo_arquivo: CharField(5, choices=TIPO_ARQUIVO_CHOICES)
+    +status: CharField(15, choices=STATUS_CHOICES)
+    +chave_acesso: CharField(44, unique=True, null=True)
+    +cnpj_emissor: CharField(18, blank=True)
+    +razao_social_emissor: CharField(255, blank=True)
+    +valor_total: DecimalField(12, 2, null=True)
+    +data_emissao: DateField(null=True)
+    +dados_extraidos: JSONField(null=True)
+    +erro_processamento: TextField(blank=True)
+    +criado_em: DateTimeField(auto_now_add=True)
+    +processado_em: DateTimeField(null=True)
+    --
+    +__str__(): str
+  }
+  
+  class TenantMixin {
+    +tenant_id: CharField
+    --
+    +get_queryset(): QuerySet
+    +save(): void
+  }
+}
+
+package "Mixins/Base Classes" {
+  
+  class TenantViewMixin {
+    --
+    +get_queryset(): QuerySet
+    +get_tenant_id(): str
+    +filter_by_tenant(): QuerySet
+  }
+  
+  class "generics.ListCreateAPIView" as ListCreateAPIView {
+    --
+    +get(): Response
+    +post(): Response
+    +get_queryset(): QuerySet
+    +get_serializer(): Serializer
+  }
+  
+  class "generics.RetrieveUpdateDestroyAPIView" as RetrieveUpdateDestroyAPIView {
+    --
+    +get(): Response
+    +put(): Response
+    +patch(): Response
+    +delete(): Response
+    +get_object(): Model
+  }
+  
+  class "generics.RetrieveUpdateAPIView" as RetrieveUpdateAPIView {
+    --
+    +get(): Response
+    +put(): Response
+    +patch(): Response
+    +get_object(): Model
+  }
+  
+  class "generics.ListAPIView" as ListAPIView {
+    --
+    +get(): Response
+    +get_queryset(): QuerySet
+  }
+  
+  class "generics.RetrieveAPIView" as RetrieveAPIView {
+    --
+    +get(): Response
+    +get_object(): Model
+  }
+}
+
+' Relacionamentos Controllers -> Serializers
+registro --> UsuarioRegistroSerializer
+login --> UsuarioLoginSerializer
+refresh_token --> UsuarioSerializer
+PerfilView --> UsuarioSerializer
+ConfiguracaoView --> ConfiguracaoUsuarioSerializer
+TransacaoListCreateView --> TransacaoSerializer
+TransacaoDetailView --> TransacaoSerializer
+CategoriaListCreateView --> CategoriaSerializer
+CategoriaDetailView --> CategoriaSerializer
+FornecedorListCreateView --> FornecedorSerializer
+FornecedorDetailView --> FornecedorSerializer
+EmpresaListCreateView --> EmpresaSerializer
+EmpresaDetailView --> EmpresaSerializer
+PlanoListView --> PlanoSerializer
+AssinaturaAtualView --> AssinaturaSerializer
+upgrade_assinatura --> UpgradeAssinaturaSerializer
+upload_nota_fiscal --> NotaFiscalUploadSerializer
+NotaFiscalStatusView --> NotaFiscalStatusSerializer
+NotaFiscalListView --> NotaFiscalSerializer
+
+' Relacionamentos Serializers -> Models
+UsuarioRegistroSerializer --> Usuario
+UsuarioLoginSerializer --> Usuario
+UsuarioSerializer --> Usuario
+ConfiguracaoUsuarioSerializer --> ConfiguracaoUsuario
+TransacaoSerializer --> Transacao
+CategoriaSerializer --> Categoria
+FornecedorSerializer --> Fornecedor
+EmpresaSerializer --> Empresa
+PlanoSerializer --> Plano
+AssinaturaSerializer --> Assinatura
+UpgradeAssinaturaSerializer --> Plano
+NotaFiscalUploadSerializer --> NotaFiscal
+NotaFiscalSerializer --> NotaFiscal
+NotaFiscalStatusSerializer --> NotaFiscal
+
+' Herança Views
+TenantViewMixin <|-- TransacaoListCreateView
+TenantViewMixin <|-- TransacaoDetailView
+TenantViewMixin <|-- CategoriaListCreateView
+TenantViewMixin <|-- CategoriaDetailView
+TenantViewMixin <|-- FornecedorListCreateView
+TenantViewMixin <|-- FornecedorDetailView
+
+ListCreateAPIView <|-- TransacaoListCreateView
+ListCreateAPIView <|-- CategoriaListCreateView
+ListCreateAPIView <|-- FornecedorListCreateView
+ListCreateAPIView <|-- EmpresaListCreateView
+
+RetrieveUpdateDestroyAPIView <|-- TransacaoDetailView
+RetrieveUpdateDestroyAPIView <|-- CategoriaDetailView
+RetrieveUpdateDestroyAPIView <|-- FornecedorDetailView
+RetrieveUpdateDestroyAPIView <|-- EmpresaDetailView
+
+RetrieveUpdateAPIView <|-- PerfilView
+RetrieveUpdateAPIView <|-- ConfiguracaoView
+
+ListAPIView <|-- PlanoListView
+ListAPIView <|-- NotaFiscalListView
+
+RetrieveAPIView <|-- AssinaturaAtualView
+RetrieveAPIView <|-- NotaFiscalStatusView
+
+' Herança Models
+TenantMixin <|-- Transacao
+TenantMixin <|-- Categoria
+TenantMixin <|-- Fornecedor
+
+' Relacionamentos entre Models
+Usuario ||--|| ConfiguracaoUsuario : configuracao
+Usuario ||--o{ Empresa : empresas
+Usuario ||--|| Assinatura : assinatura
+Empresa ||--o{ Transacao : transacoes
+Empresa ||--o{ Categoria : categorias
+Empresa ||--o{ Fornecedor : fornecedores
+Empresa ||--o{ NotaFiscal : notas_fiscais
+Categoria ||--o{ Transacao : categoria
+Fornecedor ||--o{ Transacao : fornecedor
+Fornecedor ||--o{ NotaFiscal : notas_fiscais
+Transacao ||--o| NotaFiscal : nota_fiscal
+Plano ||--o{ Assinatura : assinaturas
+
+@enduml
