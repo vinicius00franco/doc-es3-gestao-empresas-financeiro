@@ -78,6 +78,23 @@ Este diretório contém os diagramas de modelagem do sistema de gestão financei
 - **A5:** Controlar Assinaturas
 - **A6:** Gerar Relatórios e Dashboard
 
+## Visualizações dos Diagramas
+
+### Diagrama de Caso de Uso
+![use-case-diagram](./use-case-diagram.png)
+
+### Diagrama de Fluxo de Dados
+![data-flow-diagram](./data-flow-diagram.png)
+
+### Diagrama de Entidade-Relacionamento
+![entity-relationship-diagram](./entity-relationship-diagram.png)
+
+### IDEF0 - Nível 0
+![idef0-level0](./idef0-level0.png)
+
+### IDEF0 - Nível 1
+![idef0-level1](./idef0-level1.png)
+
 ## Como Visualizar os Diagramas
 
 ### Opção 1: PlantUML Online
