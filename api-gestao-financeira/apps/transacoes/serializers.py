@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .models import Transacao, Categoria, Fornecedor
 from apps.empresas.serializers import EmpresaResumoSerializer
 from core.sanitizers import sanitize_text_input, validate_cnpj_format
@@ -79,6 +80,14 @@ class TransacaoSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def validate(self, attrs):
+        # Impedir alteração de tipo_transacao após criação
+        if getattr(self, 'instance', None) is not None:
+            novo_tipo = attrs.get('tipo_transacao')
+            if novo_tipo and novo_tipo != self.instance.tipo_transacao:
+                raise serializers.ValidationError({
+                    'tipo_transacao': 'O tipo da transação não pode ser alterado após a criação.'
+                })
+
         # Validar se categoria pertence à empresa do usuário
         if 'categoria' in attrs and attrs['categoria']:
             empresa_padrao = self.context['request'].user.empresas.filter(empresa_padrao=True).first()
@@ -101,6 +110,12 @@ class TransacaoSerializer(serializers.ModelSerializer):
     
     def validate_numero_documento(self, value):
         return sanitize_text_input(value) if value else value
+
+    def validate_data_transacao(self, value):
+        hoje = timezone.now().date()
+        if value and value > hoje:
+            raise serializers.ValidationError('Data da transação não pode estar no futuro.')
+        return value
 
 
 class TransacaoResumoSerializer(serializers.ModelSerializer):

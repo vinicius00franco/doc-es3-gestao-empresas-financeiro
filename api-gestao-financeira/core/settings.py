@@ -178,6 +178,25 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# Celery Beat (tarefas periódicas)
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    # Projeção de saldo diário: roda às 2h diariamente via dispatcher (itera empresas)
+    'agenda-gerar-projecao-saldo': {
+        'task': 'apps.agenda.tasks.dispatch_gerar_projecao_saldo',
+        'schedule': crontab(minute=0, hour=2),
+        'args': (),
+        'options': {'queue': 'default'},
+    },
+    # Alertas (placeholder): verificar vencimentos/orçamentos às 8h
+    'alertas-daily-dispatch': {
+        'task': 'apps.alertas_orcamentos.tasks.dispatch_alertas',
+        'schedule': crontab(minute=0, hour=8),
+        'args': (),
+        'options': {'queue': 'default'},
+    },
+}
+
 REDIS_URL = os.environ.get('REDIS_URL')
 if REDIS_URL:
     CACHES = {
