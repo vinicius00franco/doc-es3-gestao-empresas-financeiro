@@ -1,88 +1,54 @@
-# Arquitetura Multi-Tenant
+# Arquitetura Multi-tenant (como implementada)
 
-## Visão Geral
+## Visão geral
 
-Esta implementação utiliza uma arquitetura multi-tenant com backend único e particionamento de dados no mesmo banco/schema. Cada tenant é identificado pelo `application_id` enviado no login e incluído no token JWT.
+O sistema é multi-tenant lógico: os dados são isolados por empresa (tenant) dentro do mesmo banco. O contexto do tenant é definido a partir do `application_id` informado no login e do vínculo do usuário com sua empresa padrão. O token JWT incorpora o contexto necessário para posterior identificação.
 
-## Componentes Principais
+## Componentes na base de código
 
-### 1. TenantMixin (`core/tenant.py`)
-- Adiciona campo `tenant_id` aos modelos
-- Manager personalizado que filtra automaticamente por tenant
-- Thread-local storage para o tenant atual
+1) Autenticação JWT com Tenant
+- Arquivo: `core/authentication.py` (TenantJWTAuthentication)
+- Inclui/valida `application_id` no token e associa o usuário ao contexto de empresa
 
-### 2. TenantMiddleware (`core/tenant_middleware.py`)
-- Identifica o tenant baseado na empresa padrão do usuário
-- Define o tenant atual na thread
-- Executa após autenticação
+2) Middleware de Tenant
+- Arquivo: `core/tenant_middleware.py`
+- Após autenticação, resolve a empresa ativa do usuário e seta `request.tenant_empresa`
+- Usado pelas views para filtrar QuerySets por empresa do tenant
 
-### 3. TenantViewMixin (`core/mixins.py`)
-- Mixin para views que automatiza filtro por tenant
-- Garante que novos objetos sejam criados no tenant correto
+3) Views/Serializers conscientes de tenant
+- Ex.: Listagens usam `request.tenant_empresa` para filtrar
+- `perform_create` injeta `empresa` no `serializer.save()` quando aplicável
 
-### 4. TenantAdminMixin (`core/admin.py`)
-- Isolamento de dados no Django Admin
-- Superusers podem ver todos os dados
+4) Admin/Django Admin
+- Admins usam mixins para limitar dados por empresa quando apropriado; superusers podem ver tudo
 
-## Modelos Atualizados
+## Como o isolamento funciona
 
-Os seguintes modelos agora herdam de `TenantMixin`:
-- `Transacao`
-- `Categoria` 
-- `Fornecedor`
+- Os modelos centrais (Transação, Categoria, Fornecedor, NotaFiscal, Agendamento, ProjecaoSaldo, Alerta, OrcamentoMensal) possuem FK para `Empresa`
+- O middleware garante que as operações ocorram no escopo de `request.tenant_empresa`
+- O token JWT contém `application_id` e a autenticação valida o uso correto
 
-### Índices Adicionados
-- `tenant_id + empresa`
-- `tenant_id + data_transacao`
-- `tenant_id + status`
-- `tenant_id + tipo_transacao`
+Observação: Não há `TenantMixin` genérico adicionando um campo `tenant_id` separado em todos os modelos nesta versão. O isolamento é obtido por FK de `empresa` + middleware + autenticação JWT.
 
-## Migração de Dados
+## Fluxo (resumo)
 
-Execute o comando para migrar dados existentes:
+1. Login: usuário envia `email`, `senha`, `application_id`
+2. Emissão do JWT: payload inclui `application_id`
+3. Requests seguintes: autenticação lê o token e o middleware define `request.tenant_empresa`
+4. Views: filtram por `empresa` e ao criar registros preenchem `empresa=tenant`
 
-```bash
-python manage.py migrate_to_tenant
-```
+Headers suportados
+- Opcionalmente, `X-Application-ID` pode ser usado como fallback para identificar a aplicação (sujeito às políticas)
 
-## Funcionamento
+## Celery / Processos Periódicos por Tenant
 
-1. **Login**: Usuário envia `email`, `senha` e `application_id`
-2. **Token JWT**: Token inclui `application_id` no payload
-3. **Identificação do Tenant**: Middleware extrai `application_id` do token ou cabeçalho `X-Application-ID`
-4. **Validação**: Verifica se `application_id` corresponde a empresa do usuário
-5. **Isolamento Automático**: Todas as consultas são filtradas por `tenant_id`
-6. **Criação de Dados**: Novos registros recebem `tenant_id` automaticamente
+- Tarefas periódicas (Celery Beat) disparam um dispatcher que itera empresas e agenda tarefas específicas por empresa (ex.: projeção de saldo)
+- Exemplo: `apps.agenda.tasks.dispatch_gerar_projecao_saldo` agenda `gerar_projecao_saldo(empresa_id, YYYY-MM)` para cada empresa
+- Alertas/Orçamentos: `apps.alertas_orcamentos.tasks.dispatch_alertas` varre alertas ativos por empresa
 
-## Exemplo de Uso
+## Boas práticas e considerações
 
-### Login
-```json
-{
-  "email": "user@example.com",
-  "senha": "password123",
-  "application_id": "com.tenant1"
-}
-```
-
-### Requisições Subsequentes
-- **Opção 1**: Token JWT já contém `application_id`
-- **Opção 2**: Cabeçalho `X-Application-ID: com.tenant1`
-
-## Vantagens
-
-- **Isolamento Completo**: Dados de diferentes tenants nunca se misturam
-- **Performance**: Índices otimizados por tenant
-- **Transparência**: Filtro automático, sem mudanças no código de negócio
-- **Escalabilidade**: Mesmo banco/schema, particionamento lógico
-- **Segurança**: Impossível acessar dados de outro tenant
-
-## Considerações
-
-- `application_id` deve ser enviado obrigatoriamente no login
-- Token JWT contém `application_id` para identificação automática
-- Fallback para cabeçalho `X-Application-ID` se necessário
-- Erro 400/403 se `application_id` ausente ou inválido
-- Cada usuário pode ter múltiplas empresas, mas apenas uma ativa por sessão
-- Superusers no admin podem ver dados de todos os tenants
-- Backup e restore mantêm isolamento por tenant
+- Garantir que toda consulta sensível use `request.tenant_empresa`
+- Validar pertencimento (categoria/fornecedor) à mesma empresa do usuário
+- Auditoria e logs segregados por empresa quando aplicável
+- Backups devem manter integridade referencial por `empresa_id`

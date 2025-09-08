@@ -1,6 +1,6 @@
 @startuml
 !theme plain
-title DFD - Sistema de Gestão Financeira (Simplificado Estável)
+title DFD - Sistema de Gestão Financeira (Atualizado)
 
 ' =====================
 ' Estilo / Aparência
@@ -57,6 +57,8 @@ circle "3.0\nProcessar\nTransações" as P3
 circle "4.0\nProcessar\nNotas Fiscais" as P4
 circle "5.0\nGerenciar\nAssinaturas" as P5
 circle "6.0\nGerar\nDashboard" as P6
+circle "7.0\nAgenda\n(Projeções)" as P7
+circle "8.0\nAlertas/\nOrçamentos" as P8
 
 ' =====================
 ' Depósitos de Dados
@@ -72,6 +74,10 @@ rectangle "D8 | Plano (plan_id)" as D8 <<datastore>>
 rectangle "D9 | LogAtividade (loga_id)" as D9 <<datastore>>
 rectangle "D10 | ConfiguracaoUsuario (conf_id)" as D10 <<datastore>>
 rectangle "D11 | TokenRecuperacao (tokn_id)" as D11 <<datastore>>
+rectangle "D12 | Agendamento (agen_id)" as D12 <<datastore>>
+rectangle "D13 | ProjecaoSaldo (proj_id)" as D13 <<datastore>>
+rectangle "D14 | Alerta (aler_id)" as D14 <<datastore>>
+rectangle "D15 | OrcamentoMensal (orcm_id)" as D15 <<datastore>>
 
 ' =====================
 ' Fluxos do Usuário
@@ -88,6 +94,8 @@ User -[#2F4858]-> P5 : dados assinatura
 P5 -[#2F4858]-> User : status assinatura
 User -[#2F4858]-> P6 : filtros dashboard
 P6 -[#2F4858]-> User : dados dashboard
+User -[#2F4858]-> P7 : filtros mês
+P7 -[#2F4858]-> User : saldo diário projetado
 
 ' =====================
 ' Gateways Externos
@@ -118,6 +126,10 @@ P5 -[#grey,dashed]-> D9 : log assinatura
 D3 -[#0B6E4F]-> P6 : consultar transacoes
 D6 -[#0B6E4F]-> P6 : consultar NF-e
 D2 -[#0B6E4F]-> P6 : consultar empresas
+P7 <-> D12 : R/W agendamentos (agen_app_id)
+P7 <-> D13 : R/W projeções (proj_app_id)
+P8 <-> D14 : R/W alertas (aler_app_id)
+P8 <-> D15 : R/W orçamentos (orcm_app_id)
 
 ' =====================
 ' Inter‑Processos
@@ -125,6 +137,8 @@ D2 -[#0B6E4F]-> P6 : consultar empresas
 P3 -[#1F6FB2,bold]-> P5 : verificar limites
 P5 -[#1F6FB2,bold]-> P3 : limite aprovado
 P4 -[#1F6FB2,bold]-> P3 : criar transação NF
+P7 -[#1F6FB2,bold]-> P6 : disponibilizar projeções
+P8 -[#1F6FB2,bold]-> P6 : indicadores de orçamento
 
 legend right
 <b>Legenda</b>\nProcesso: Círculo Verde\nEntidade Externa: Retângulo Laranja\nDepósito de Dados: Retângulo Amarelo\nAzul escuro: Fluxos usuário/dados\nRoxo: Sistemas externos\nVerde escuro: Consultas dashboard\nCinza tracejado: Logs\nAzul vivo: Inter‑processos críticos

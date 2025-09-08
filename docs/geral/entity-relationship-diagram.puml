@@ -2,7 +2,7 @@
 
 !theme plain
 
-title DER - Sistema de Gestão Financeira (Atualizado)
+title DER - Sistema de Gestão Financeira (Alinhado ao Código)
 
 ' =====================
 ' Estilo Global
@@ -155,37 +155,27 @@ entity "Categoria" <<finance>> {
 ' =====================
 
 ' Nova: Fornecedor Global (para evitar repetições)
-entity "FornecedorGlobal" <<finance>> {
-  * forn_id_global : INTEGER <<PK>>
+entity "Fornecedor" <<finance>> {
+  * forn_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
   --
-  * forn_cnpj : VARCHAR(18) <<UK>>
+  * forn_cnpj : VARCHAR(18)
   * forn_razao_social : VARCHAR(255)
   * forn_nome_fantasia : VARCHAR(255)
   * forn_email : VARCHAR(255)
   * forn_telefone : VARCHAR(20)
+  * forn_endereco : TEXT
   * forn_criado_auto : BOOLEAN
   * forn_ativo : BOOLEAN
   * forn_dt_criacao : DATETIME
   * forn_dt_atualizacao : DATETIME
-  ' Removido: campos locais como endereco (agora em junção)
 }
 
-' Nova: Tabela de Junção M:N para Fornecedor
-entity "EmpresaFornecedor" <<finance>> {
-  * emfo_id : INTEGER <<PK>>
-  * empr_id : INTEGER <<FK>>
-  * forn_id_global : INTEGER <<FK>>
-  --
-  * emfo_endereco : TEXT  ' Atributo local por empresa
-  * emfo_dt_criacao : DATETIME
-}
-
-' Transacao (inalterada, mas agora relaciona com EmpresaFornecedor? Não, mantém FK com FornecedorGlobal via junção lógica)
 entity "Transacao" <<finance>> {
   * tran_id : INTEGER <<PK>>
   * empr_id : INTEGER <<FK>>
   * cate_id : INTEGER <<FK>>
-  * forn_id_global : INTEGER <<FK>>  ' Alterado: Agora referencia global
+  * forn_id : INTEGER <<FK>>
   --
   * tran_app_id : VARCHAR(255) <<PARTITION>>
   * tran_descricao : VARCHAR(255)
@@ -205,7 +195,7 @@ entity "Transacao" <<finance>> {
 entity "NotaFiscal" <<fiscal>> {
   * notf_id : INTEGER <<PK>>
   * empr_id : INTEGER <<FK>>
-  * forn_id_global : INTEGER <<FK>>  ' Alterado: Referencia global
+  * forn_id : INTEGER <<FK>>
   * tran_id : INTEGER <<FK>>
   --
   * notf_app_id : VARCHAR(255) <<PARTITION>>
@@ -247,22 +237,47 @@ entity "DetalheLog" <<log>> {
 }
 
 ' Nova para 4NF: Icone Global e Junção com Categoria (exemplo de evolução)
-entity "IconeGlobal" <<finance>> {
-  * icon_id : INTEGER <<PK>>
+entity "Agendamento" <<finance>> {
+  * agen_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
   --
-  * icon_nome : VARCHAR(50) <<UK>>
-  * icon_caminho : VARCHAR(255)
-  * icon_dt_criacao : DATETIME
+  * agen_descricao : VARCHAR(255)
+  * agen_valor : DECIMAL(12,2)
+  * agen_dt_vencimento : DATE
+  * agen_tipo : VARCHAR(10) ' entrada/saida
+  * agen_status : VARCHAR(15)
+  * agen_recorrencia : VARCHAR(20)
+  * agen_dt_criacao : DATETIME
 }
 
-entity "CategoriaIcone" <<finance>> {
-  * cati_id : INTEGER <<PK>>
-  * cate_id : INTEGER <<FK>>
-  * icon_id : INTEGER <<FK>>
+entity "ProjecaoSaldo" <<finance>> {
+  * proj_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
   --
-  * cati_plataforma : VARCHAR(20)  ' ex.: 'desktop', 'mobile'
-  * cati_ativo : BOOLEAN
-  * cati_dt_criacao : DATETIME
+  * proj_data : DATE
+  * proj_saldo_previsto : DECIMAL(12,2)
+}
+
+entity "Alerta" <<finance>> {
+  * aler_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
+  --
+  * aler_tipo : VARCHAR(20)
+  * aler_canal : VARCHAR(10)
+  * aler_antecedencia_dias : INTEGER
+  * aler_ativo : BOOLEAN
+  * aler_parametros : JSON
+  * aler_dt_criacao : DATETIME
+}
+
+entity "OrcamentoMensal" <<finance>> {
+  * orcm_id : INTEGER <<PK>>
+  * empr_id : INTEGER <<FK>>
+  --
+  * cate_id_ref : INTEGER  ' referência indireta
+  * orcm_mes : CHAR(7)
+  * orcm_valor_planejado : DECIMAL(12,2)
+  * orcm_dt_criacao : DATETIME
 }
 
 ' =====================
@@ -277,25 +292,26 @@ Usuario ||--o{ Empresa : gerencia
 Plano ||--o{ Assinatura : define
 
 Empresa ||--o{ Categoria : possui
-Empresa ||--o{ EmpresaFornecedor : associa  ' Novo: M:N com FornecedorGlobal
-FornecedorGlobal ||--o{ EmpresaFornecedor : mapeia  ' Novo
 Empresa ||--o{ Transacao : registra
 Empresa ||--o{ NotaFiscal : processa
+Empresa ||--o{ Fornecedor : possui
+Empresa ||--o{ Agendamento : agenda
+Empresa ||--o{ ProjecaoSaldo : projeta
+Empresa ||--o{ Alerta : alerta
+Empresa ||--o{ OrcamentoMensal : orça
 
 Categoria ||--o{ Transacao : categoriza
-Categoria ||--o{ CategoriaIcone : possui  ' Novo: M:N para 4NF
-IconeGlobal ||--o{ CategoriaIcone : define  ' Novo
 
-FornecedorGlobal ||--o{ Transacao : fornece  ' Alterado: Global
-FornecedorGlobal ||--o{ NotaFiscal : emite  ' Alterado: Global
+Fornecedor ||--o{ Transacao : fornece
+Fornecedor ||--o{ NotaFiscal : emite
 
 Transacao ||--o| NotaFiscal : origina
 NotaFiscal ||--o{ ItemNotaFiscal : contém  ' Novo: 1:N
 
-LogAtividade ||--o{ DetalheLog : detalha  ' Novo: 1:N
+LogAtividade ||--o{ DetalheLog : detalha
 
 legend right
-<b>Legenda</b>\n<<auth>> Autenticação / Usuários\n<<finance>> Domínio Financeiro\n<<fiscal>> Fiscal / NF-e\n<<log>> Monitoramento & Log\nPK = chave primária | FK = chave estrangeira | UK = único\nPARTITION = campo de particionamento por tenant\n*Novidades*: FornecedorGlobal, EmpresaFornecedor, ItemNotaFiscal, DetalheLog, IconeGlobal, CategoriaIcone
+<b>Legenda</b>\n<<auth>> Autenticação / Usuários\n<<finance>> Domínio Financeiro\n<<fiscal>> Fiscal / NF-e\n<<log>> Monitoramento & Log\nPK = chave primária | FK = chave estrangeira | UK = único\nPARTITION = campo de particionamento por aplicação (tenant lógico)
 endlegend
 
 @enduml

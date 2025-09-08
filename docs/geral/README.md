@@ -119,13 +119,11 @@ plantuml -tpng *.puml
 plantuml -tsvg *.puml
 ```
 
-## Arquitetura Multi-tenant
+## Arquitetura Multi-tenant (resumo)
 
-O sistema implementa arquitetura multi-tenant onde:
-- Cada usuário pode ter múltiplas empresas
-- Dados são isolados por `tenant_id`
-- Empresa padrão define o contexto principal
-- Assinaturas controlam limites por usuário
+- Cada usuário pode ter múltiplas empresas; a empresa padrão define o contexto
+- Isolamento por FK de `empresa` + autenticação JWT + `TenantMiddleware`
+- Endpoints filtram por `request.tenant_empresa` e persistem `empresa` ao criar
 
 ## Fluxos Principais
 
@@ -141,6 +139,10 @@ O sistema implementa arquitetura multi-tenant onde:
 2. Bloqueio de funcionalidades premium
 3. Integração com gateway de pagamento
 4. Atualização automática de status
+
+### Agenda e Alertas (assíncronos)
+- Celery Beat agenda dispatcher diário para projeção de saldo por empresa
+- Dispatcher de alertas varre alertas ativos por empresa
 
 ## Tecnologias Utilizadas
 

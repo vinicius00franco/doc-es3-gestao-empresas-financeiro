@@ -1,6 +1,6 @@
 @startuml
 !theme plain
-title Diagrama de Caso de Uso - API Gestão Financeira
+title Diagrama de Caso de Uso - API Gestão Financeira (Atualizado)
 
 skinparam linetype ortho
 skinparam backgroundColor #F6F9FC
@@ -21,10 +21,16 @@ skinparam package {
 }
 skinparam titleFontSize 20
 skinparam titleFontColor #1F4E79
+skinparam packageSpacing 50
+skinparam usecaseSpacing 25
+skinparam actorSpacing 20
 left to right direction
 
+together {
 actor "Usuário" as User <<primary>>
 actor "Sistema de Pagamento" as PaymentSystem <<external>>
+}
+
 actor "Receita Federal" as ReceitaFederal <<external>>
 
 rectangle "Sistema de Gestão Financeira" {
@@ -43,13 +49,19 @@ rectangle "Sistema de Gestão Financeira" {
     usecase "Listar Empresas\n(por usua_id)" as UC8
   }
   
-  package "Gestao Financeira (Particionada)" {
+  package "Gestao Financeira (Tenant-aware)" {
     usecase "Criar Transacao\n(tran_app_id)" as UC9
     usecase "Editar Transacao\n(tran_id)" as UC10
     usecase "Excluir Transacao\n(tran_id)" as UC11
     usecase "Listar Transacoes\n(por tran_app_id)" as UC12
     usecase "Gerenciar Categorias\n(cate_app_id)" as UC13
     usecase "Gerenciar Fornecedores\n(forn_app_id)" as UC14
+  }
+  
+  package "Agenda & Alertas" {
+    usecase "Agendar Contas a Pagar/Receber" as UC26
+    usecase "Projeção de Saldo Diário" as UC27
+    usecase "Configurar Alertas" as UC28
   }
   
   package "Processamento Fiscal (Particionado)" {
@@ -97,6 +109,9 @@ User --> UC21
 User --> UC23
 User --> UC24
 User --> UC25
+User --> UC26
+User --> UC27
+User --> UC28
 
 ' Relacionamentos do Sistema de Pagamento
 PaymentSystem --> UC19
@@ -113,6 +128,7 @@ UC9 --> UC22 : <<include>>
 UC5 --> UC22 : <<include>>
 UC24 --> UC22 : <<include>>
 UC25 --> UC22 : <<include>>
+UC27 --> UC24 : <<include>>
 
 legend right
 <b>Legenda</b>\nActor <<primary>>: Usuário principal\nActor <<external>>: Sistema Externo\n<<include>> Dependência obrigatória\n<<extend>> Comportamento opcional

@@ -1,6 +1,6 @@
 @startuml
 !theme plain
-title IDEF0 Nível 0 - Sistema de Gestão Financeira
+title IDEF0 Nível 0 - Sistema de Gestão Financeira (Atualizado)
 
 skinparam linetype ortho
 skinparam backgroundColor #F7FAFC

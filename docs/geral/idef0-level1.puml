@@ -1,6 +1,6 @@
 @startuml
 !theme plain
-title IDEF0 Nível 1 - Decomposição do Sistema de Gestão Financeira
+title IDEF0 Nível 1 - Decomposição do Sistema de Gestão Financeira (Atualizado)
 
 skinparam linetype ortho
 skinparam backgroundColor #F7FAFC
@@ -28,6 +28,8 @@ rectangle "PROCESSAR\nTRANSAÇÕES\nA3" as A3
 rectangle "PROCESSAR\nNF-e\nA4" as A4
 rectangle "CONTROLAR\nASSINATURAS\nA5" as A5
 rectangle "RELATÓRIOS /\nDASHBOARD\nA6" as A6
+rectangle "AGENDA /\nPROJEÇÕES\nA7" as A7
+rectangle "ALERTAS /\nORÇAMENTOS\nA8" as A8
 
 ' =====================
 ' INPUTS
@@ -36,10 +38,14 @@ rectangle "Credenciais\nUsuario (usua_email)" as IN_A1
 rectangle "Dados Empresa\n(empr_cnpj, empr_app_id)" as IN_A2
 rectangle "Dados Transacao\n(tran_valor, tran_app_id)" as IN_A3
 rectangle "Arquivos NF-e\n(notf_arquivo, notf_app_id)" as IN_A4
+rectangle "Dados Agenda\n(agen_valor, agen_dt)" as IN_A7
+rectangle "Dados Alertas\n(aler_tipo, orcm_mes)" as IN_A8
 IN_A1 -right-> A1
 IN_A2 -right-> A2
 IN_A3 -right-> A3
 IN_A4 -right-> A4
+IN_A7 -right-> A7
+IN_A8 -right-> A8
 
 ' =====================
 ' CONTROLS
@@ -50,12 +56,16 @@ rectangle "Limites Plano (plan_*)\nRegras Categoria" as CT_A3
 rectangle "Padroes NF-e\nLegislacao" as CT_A4
 rectangle "Politicas Cobranca\nRegras Planos" as CT_A5
 rectangle "Permissoes\nMulti-tenant" as CT_A6
+rectangle "Regras Projeção\nRecorrência" as CT_A7
+rectangle "Regras Alertas\nOrçamentos" as CT_A8
 CT_A1 -down-> A1
 CT_A2 -down-> A2
 CT_A3 -down-> A3
 CT_A4 -down-> A4
 CT_A5 -down-> A5
 CT_A6 -down-> A6
+CT_A7 -down-> A7
+CT_A8 -down-> A8
 
 ' =====================
 ' OUTPUTS
@@ -66,12 +76,16 @@ rectangle "Transacao Processada\n(tran_id, cate_id)" as OUT_A3
 rectangle "Dados NF-e\n(notf_dados_extraidos)" as OUT_A4
 rectangle "Status Assinatura\n(assi_status)" as OUT_A5
 rectangle "Dashboard\nRelatorios" as OUT_A6
+rectangle "Saldo Diário\nPrevisto" as OUT_A7
+rectangle "Alertas Emitidos\nStatus Orçamentos" as OUT_A8
 A1 -right-> OUT_A1
 A2 -right-> OUT_A2
 A3 -right-> OUT_A3
 A4 -right-> OUT_A4
 A5 -right-> OUT_A5
 A6 -right-> OUT_A6
+A7 -right-> OUT_A7
+A8 -right-> OUT_A8
 
 ' =====================
 ' MECHANISMS
@@ -82,12 +96,16 @@ rectangle "Motor Categoria\nTabela Transacao (Particionada)" as M_A3
 rectangle "Parser XML/PDF\nTabela NotaFiscal (Particionada)" as M_A4
 rectangle "Gateway Pagamento\nTabela Assinatura" as M_A5
 rectangle "Motor Relatorios\nCache Redis + Tenant Filter" as M_A6
+rectangle "Celery Beat\nTabelas Agenda/Projeção" as M_A7
+rectangle "Celery Beat\nAlertas/Orçamentos" as M_A8
 M_A1 -up-> A1
 M_A2 -up-> A2
 M_A3 -up-> A3
 M_A4 -up-> A4
 M_A5 -up-> A5
 M_A6 -up-> A6
+M_A7 -up-> A7
+M_A8 -up-> A8
 
 ' Fluxos internos entre funções
 A1 -[bold]-> A2 : Usuario (usua_id)
@@ -96,6 +114,8 @@ A3 -[bold]-> A6 : Transacoes (tran_app_id)
 A4 -[bold]-> A3 : NF-e -> Transacao
 A5 -[bold]-> A3 : Limites (plan_limite_*)
 A5 -[bold]-> A6 : Permissoes
+A7 -[bold]-> A6 : Projeções
+A8 -[bold]-> A6 : Indicadores
 
 legend right
 <b>IDEF0 Nível 1</b>\nEsquerda: Inputs | Topo: Controls\nDireita: Outputs | Baixo: Mechanisms

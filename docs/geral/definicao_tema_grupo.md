@@ -2,9 +2,9 @@
 
 ## Tema do Trabalho
 
-**Gestão Financeira para Empresas**  
+**Gestão Financeira para Empresas**
 
-O tema escolhido envolve o desenvolvimento de um sistema de gestão financeira destinado a empresas, incluindo funcionalidades como controle de transações, relatórios financeiros, gestão de assinaturas e integração com notas fiscais. O projeto será implementado utilizando tecnologias modernas, como Django para o backend e React Native para o aplicativo móvel.
+Sistema de gestão financeira multi-tenant voltado a empresas, com controle de transações, categorias e fornecedores, processamento de notas fiscais, assinaturas/planos, agenda de contas (previsões) e alertas/orçamentos. Backend em Django REST Framework e app móvel em React Native.
 
 ## Componentes do Grupo
 
@@ -115,17 +115,17 @@ Para uma apresentação clara e progressiva do sistema, os diagramas foram organ
 Os diagramas foram exportados para imagens (PNG) e incluídos nesta seção do documento Word para visualização. Cada diagrama é acompanhado de sua descrição detalhada acima.
 
 #### Diagrama de Caso de Uso
-![use-case-diagram](./use-case-diagram.png)
+![use-case-diagram](./imgs/use-case-diagram.png)
 
 #### Diagrama de Fluxo de Dados
-![data-flow-diagram](./data-flow-diagram.png)
+![data-flow-diagram](./imgs/data-flow-diagram.png)
 
 #### Diagrama de Entidade-Relacionamento
-![entity-relationship-diagram](./entity-relationship-diagram.png)
+![entity-relationship-diagram](./imgs/entity-relationship-diagram.png)
 
 #### IDEF0 Nível 0
-![idef0-level0](./idef0-level0.png)
+![idef0-level0](./imgs/idef0-level0.png)
 
 #### IDEF0 Nível 1
-![idef0-level1](./idef0-level1.png)
+![idef0-level1](./imgs/idef0-level1.png)
 
