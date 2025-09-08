@@ -20,6 +20,9 @@ urlpatterns = [
     path('api/v1/', include('apps.assinaturas.urls')),
     path('api/v1/dashboard/', include('apps.dashboard.urls')),
     path('api/v1/', include('apps.notas_fiscais.urls')),
+    path('api/v1/', include('apps.agenda.urls')),
+    path('api/v1/', include('apps.alertas_orcamentos.urls')),
+    path('api/v1/', include('apps.automacoes.urls')),
 ]
 
 if settings.DEBUG:

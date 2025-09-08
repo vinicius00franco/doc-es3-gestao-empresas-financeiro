@@ -46,13 +46,23 @@ def processar_nota_fiscal_mock(nota_fiscal):
         nota_fiscal.status = 'processing'
         nota_fiscal.save()
         
-        # Simular dados extraídos
-        dados_mock = {
-            'cnpj_emissor': '12.345.678/0001-90',
-            'razao_social': 'Fornecedor ABC LTDA',
-            'valor_total': '1500.00',
-            'data_emissao': '2025-01-20'
-        }
+        # Simular extração via serviço dedicado
+        try:
+            from .services import parse_nfe_xml
+            conteudo = None
+            try:
+                if nota_fiscal.caminho_arquivo and hasattr(nota_fiscal.caminho_arquivo, 'file'):
+                    conteudo = nota_fiscal.caminho_arquivo.file.read()
+            except Exception:
+                conteudo = None
+            dados_mock = parse_nfe_xml(conteudo or b'')
+        except Exception:
+            dados_mock = {
+                'cnpj_emissor': '12.345.678/0001-90',
+                'razao_social': 'Fornecedor ABC LTDA',
+                'valor_total': '1500.00',
+                'data_emissao': '2025-01-20'
+            }
         
         # Criar ou buscar fornecedor
         fornecedor, created = Fornecedor.objects.get_or_create(

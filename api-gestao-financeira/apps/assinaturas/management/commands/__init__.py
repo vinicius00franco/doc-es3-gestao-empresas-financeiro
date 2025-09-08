@@ -1,0 +1,1 @@
+# Commands for assinaturas app

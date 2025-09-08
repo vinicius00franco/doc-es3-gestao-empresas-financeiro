@@ -36,6 +36,9 @@ LOCAL_APPS = [
     'apps.assinaturas',
     'apps.dashboard',
     'apps.notas_fiscais',
+    'apps.agenda',
+    'apps.alertas_orcamentos',
+    'apps.automacoes',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

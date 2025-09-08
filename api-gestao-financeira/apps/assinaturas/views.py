@@ -36,12 +36,12 @@ def upgrade_assinatura(request):
     if serializer.is_valid():
         plano_id = serializer.validated_data['plano_id']
         plano = Plano.objects.get(id=plano_id)
-        
-        # Simular integração com gateway de pagamento
-        # Em produção, aqui seria feita a integração real
-        payment_url = f"https://payment-gateway.com/checkout/{plano_id}"
-        session_id = f"cs_{timezone.now().timestamp()}"
-        
+        # Simular integração com gateway de pagamento via serviço dedicado
+        from apps.notas_fiscais.services import payment_gateway_create_checkout
+        checkout = payment_gateway_create_checkout(plano_id)
+        payment_url = checkout['payment_url']
+        session_id = checkout['session_id']
+
         return Response({
             'payment_url': payment_url,
             'session_id': session_id,

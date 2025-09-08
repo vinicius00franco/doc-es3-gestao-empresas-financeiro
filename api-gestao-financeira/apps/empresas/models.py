@@ -16,6 +16,12 @@ class Empresa(models.Model):
     razao_social = models.CharField(max_length=255)
     nome_fantasia = models.CharField(max_length=255, blank=True)
     tipo_empresa = models.CharField(max_length=10, choices=TIPO_EMPRESA_CHOICES)
+    REGIME_TRIBUTARIO_CHOICES = [
+        ('SIMPLES', 'Simples Nacional'),
+        ('PRESUMIDO', 'Lucro Presumido'),
+        ('REAL', 'Lucro Real'),
+    ]
+    regime_tributario = models.CharField(max_length=10, choices=REGIME_TRIBUTARIO_CHOICES, default='SIMPLES')
     ativa = models.BooleanField(default=True)
     empresa_padrao = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)

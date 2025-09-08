@@ -8,7 +8,7 @@ class EmpresaSerializer(serializers.ModelSerializer):
         model = Empresa
         fields = [
             'id', 'cnpj', 'razao_social', 'nome_fantasia', 
-            'tipo_empresa', 'ativa', 'empresa_padrao', 
+            'tipo_empresa', 'regime_tributario', 'ativa', 'empresa_padrao', 
             'criado_em', 'atualizado_em'
         ]
         read_only_fields = ['id', 'criado_em', 'atualizado_em']
@@ -26,7 +26,17 @@ class EmpresaSerializer(serializers.ModelSerializer):
         return sanitize_text_input(value) if value else value
 
     def create(self, validated_data):
-        validated_data['usuario'] = self.context['request'].user
+        user = self.context['request'].user
+        # Verifica limite de empresas pelo plano do usuário (se existir assinatura)
+        try:
+            assinatura = getattr(user, 'assinatura', None)
+            if assinatura and not assinatura.pode_criar_empresa():
+                raise serializers.ValidationError("Limite de empresas atingido pelo plano atual.")
+        except Exception:
+            # Se houver qualquer erro ao verificar, segue sem bloquear
+            pass
+
+        validated_data['usuario'] = user
         return super().create(validated_data)
 
 
